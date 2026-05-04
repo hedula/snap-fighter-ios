@@ -67,17 +67,29 @@ export default {
 };
 
 async function runVisionModelWithAutoAgree(env: Env, systemPrompt: string, dataUrl: string): Promise<unknown> {
-  try {
-    return await runVisionModel(env, systemPrompt, dataUrl);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    if (!message.includes("5016")) {
-      throw error;
+  let agreedOnce = false;
+
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    try {
+      return await runVisionModel(env, systemPrompt, dataUrl);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (!message.includes("5016")) {
+        throw error;
+      }
+
+      if (!agreedOnce) {
+        // One-time license gate for this account/model.
+        await env.AI.run("@cf/meta/llama-3.2-11b-vision-instruct", { prompt: "agree" });
+        agreedOnce = true;
+      }
+
+      // Cloudflare may still return a transient 5016 confirmation message once after agreement.
+      await sleep(600);
     }
-    // One-time license gate for this account/model.
-    await env.AI.run("@cf/meta/llama-3.2-11b-vision-instruct", { prompt: "agree" });
-    return await runVisionModel(env, systemPrompt, dataUrl);
   }
+
+  throw new Error("5016: license gate retry exhausted");
 }
 
 async function runVisionModel(env: Env, systemPrompt: string, dataUrl: string): Promise<unknown> {
@@ -159,4 +171,8 @@ function corsHeaders(): HeadersInit {
     "Access-Control-Allow-Headers": "Content-Type",
     "Access-Control-Allow-Methods": "GET,POST,OPTIONS"
   };
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }

@@ -39,3 +39,8 @@
 - 問題: `llama-3.2-11b-vision-instruct` 需要獨立 `prompt: "agree"` 請求，放在 chat messages 內無效。
 - 修正: Worker 若收到 5016，先自動送一次 `prompt: "agree"`，再重試同一個 vision 分析請求。
 - 效果: 首次授權可自動完成，降低手動初始化成本。
+
+## Phase: Workers AI 5016 Post-Agree Retry Hardening (2026-05-04)
+- 問題: 已同意條款後，短時間內仍可能回 `5016: Thank you for agreeing...` 過渡訊息。
+- 修正: Worker 在 5016 情況下加入多次重試與短暫等待；首次自動送 `agree`，後續 5016 視為暫時狀態。
+- 效果: 降低首次授權後的瞬時失敗率。
