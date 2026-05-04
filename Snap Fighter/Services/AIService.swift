@@ -88,7 +88,7 @@ final class AIService {
         }
         do {
             let monsterResponse = try JSONDecoder().decode(MonsterResponse.self, from: jsonData)
-            return Monster(from: monsterResponse)
+            return Monster(from: monsterResponse, capturedImage: image)
         } catch {
             throw AIError.decodingFailed(cleaned)
         }
@@ -128,7 +128,7 @@ final class AIService {
             def: 35,
             skill: "沸騰之力：發動時使對方陷入灼燒狀態"
         )
-        return Monster(from: response)
+        return Monster(from: response, capturedImage: image)
     }
 }
 

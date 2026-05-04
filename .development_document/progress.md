@@ -12,3 +12,11 @@
   - 非 200 時解析 `error.message` 並顯示 `API 錯誤：...`。
   - `message.content` 同時支援字串與陣列（`[{type:"text",text:"..."}]`）。
 - 效果: 能正確揭露 API 端錯誤，並提升相容性避免誤判格式錯誤。
+
+## Phase: Card Shows Captured Image (2026-05-04)
+- 需求: 將拍照/上傳圖片放入角色卡片。
+- 修正:
+  - `Monster` 新增 `capturedImage` 欄位，生成角色時保留來源圖片。
+  - `AIService` 在解析成功後把原始圖片帶入 `Monster`。
+  - `CardView` 新增卡面圖區，顯示來源圖片於卡片上半部。
+- 效果: 抓到角色後、對戰前卡片、結果卡片都能看到原圖。
