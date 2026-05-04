@@ -1,0 +1,9 @@
+# Xcode
+*.xcuserstate
+xcuserdata/
+*.xcbkptlist
+DerivedData/
+.build/
+
+# Cloudflare Worker local env
+worker/.dev.vars

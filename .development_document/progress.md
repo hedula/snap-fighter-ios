@@ -20,3 +20,12 @@
   - `AIService` 在解析成功後把原始圖片帶入 `Monster`。
   - `CardView` 新增卡面圖區，顯示來源圖片於卡片上半部。
 - 效果: 抓到角色後、對戰前卡片、結果卡片都能看到原圖。
+
+## Phase: Move AI Calls to Cloudflare Worker (2026-05-04)
+- 目標: 改實作 Cloudflare Worker `/analyze`，iOS 改呼叫 Worker，移除 App 端明文 API Key，維持原本 `MonsterResponse`。
+- 修正:
+  - 新增 `worker/` 專案（`wrangler.toml`, `src/index.ts`, `README.md`），使用 Workers AI vision model 產生怪物 JSON。
+  - iOS `AIService` 改為上傳 `imageBase64` 到 `Config.workerAnalyzeEndpoint`。
+  - `Config.swift` 移除 OpenAI key 與 endpoint，只保留 Worker endpoint。
+  - 維持回傳 schema：`name/element/hp/atk/def/skill`。
+- 結果: App 不再直接暴露第三方 AI key，後續可在 Worker 層調整模型與成本。
