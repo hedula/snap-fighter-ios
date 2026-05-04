@@ -49,3 +49,11 @@
 - 問題: `text.replace is not a function`，原因是 Workers AI 在某些情況回傳非字串 payload。
 - 修正: Worker 解析層改為支援字串/物件/陣列輸出格式，再統一餵給 JSON 正規化流程。
 - 效果: 避免因回傳型別差異造成 runtime crash。
+
+## Phase: Separate Camera and Photo Buttons (2026-05-04)
+- 需求: `拍照抓怪` 使用相機；新增 `使用照片` 按鈕走相簿。
+- 修正:
+  - `CameraView` 新增 `Source`（camera/photoLibrary）參數。
+  - `ContentView` 改為可指定來源開啟 picker。
+  - 在首頁與抓到卡片頁都新增 `使用照片` 按鈕，主按鈕維持相機語意。
+- 結果: 使用者可明確選擇「拍照」或「從照片庫挑圖」。

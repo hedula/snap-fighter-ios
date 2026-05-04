@@ -3,6 +3,12 @@ import UIKit
 import PhotosUI
 
 struct CameraView: UIViewControllerRepresentable {
+    enum Source {
+        case camera
+        case photoLibrary
+    }
+
+    let source: Source
     let onImagePicked: (UIImage) -> Void
     let onDismiss: () -> Void
 
@@ -11,6 +17,15 @@ struct CameraView: UIViewControllerRepresentable {
     }
 
     func makeUIViewController(context: Context) -> UIViewController {
+        if source == .photoLibrary {
+            var config = PHPickerConfiguration()
+            config.filter = .images
+            config.selectionLimit = 1
+            let picker = PHPickerViewController(configuration: config)
+            picker.delegate = context.coordinator
+            return picker
+        }
+
         #if targetEnvironment(simulator)
         var config = PHPickerConfiguration()
         config.filter = .images
