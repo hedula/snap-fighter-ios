@@ -52,12 +52,12 @@ export default {
 
       const aiResult = await runVisionModelWithAutoAgree(env, systemPrompt, dataUrl);
 
-      const text = extractText(aiResult);
-      if (!text) {
+      const modelPayload = extractModelPayload(aiResult);
+      if (modelPayload == null) {
         return json({ error: "Workers AI returned empty content" }, 502);
       }
 
-      const monster = normalizeMonster(parseMonsterJson(text));
+      const monster = normalizeMonster(parseMonsterJson(modelPayload));
       return json(monster);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unknown worker error";
@@ -109,14 +109,36 @@ async function runVisionModel(env: Env, systemPrompt: string, dataUrl: string): 
   });
 }
 
-function extractText(result: unknown): string | null {
+function extractModelPayload(result: unknown): unknown {
   if (!result || typeof result !== "object") return null;
-  const r = result as { response?: string; result?: { response?: string } };
-  return r.response ?? r.result?.response ?? null;
+  const r = result as {
+    response?: unknown;
+    result?: { response?: unknown };
+    output_text?: unknown;
+    outputs?: Array<{ text?: unknown; content?: unknown }>;
+  };
+
+  if (r.response != null) return r.response;
+  if (r.result?.response != null) return r.result.response;
+  if (r.output_text != null) return r.output_text;
+  if (Array.isArray(r.outputs) && r.outputs.length > 0) {
+    const first = r.outputs[0];
+    if (first.text != null) return first.text;
+    if (first.content != null) return first.content;
+  }
+  return null;
 }
 
-function parseMonsterJson(text: string): unknown {
-  const cleaned = text
+function parseMonsterJson(payload: unknown): unknown {
+  if (payload && typeof payload === "object") {
+    return payload;
+  }
+
+  if (typeof payload !== "string") {
+    throw new Error("Model output is not a string/object JSON payload");
+  }
+
+  const cleaned = payload
     .replace(/```json/gi, "")
     .replace(/```/g, "")
     .trim();

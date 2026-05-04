@@ -44,3 +44,8 @@
 - 問題: 已同意條款後，短時間內仍可能回 `5016: Thank you for agreeing...` 過渡訊息。
 - 修正: Worker 在 5016 情況下加入多次重試與短暫等待；首次自動送 `agree`，後續 5016 視為暫時狀態。
 - 效果: 降低首次授權後的瞬時失敗率。
+
+## Phase: Worker Output-Type Parsing Fix (2026-05-04)
+- 問題: `text.replace is not a function`，原因是 Workers AI 在某些情況回傳非字串 payload。
+- 修正: Worker 解析層改為支援字串/物件/陣列輸出格式，再統一餵給 JSON 正規化流程。
+- 效果: 避免因回傳型別差異造成 runtime crash。
