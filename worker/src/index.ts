@@ -56,6 +56,7 @@ export default {
           {
             role: "user",
             content: [
+              { type: "text", text: "agree" },
               { type: "image_url", image_url: { url: dataUrl } },
               { type: "text", text: "請依照 schema 回傳 JSON。" }
             ]

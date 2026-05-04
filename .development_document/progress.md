@@ -29,3 +29,8 @@
   - `Config.swift` 移除 OpenAI key 與 endpoint，只保留 Worker endpoint。
   - 維持回傳 schema：`name/element/hp/atk/def/skill`。
 - 結果: App 不再直接暴露第三方 AI key，後續可在 Worker 層調整模型與成本。
+
+## Phase: Workers AI License-Gate Fix (2026-05-04)
+- 問題: Workers AI 回傳 `5016`，要求先提交 `agree` 以接受 llama-3.2-11b-vision-instruct 授權條款。
+- 修正: Worker 對模型的 user content 先加入 `"agree"` 文字。
+- 效果: 避免授權確認錯誤，恢復模型推論流程。
