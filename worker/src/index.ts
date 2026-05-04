@@ -1,6 +1,8 @@
 export interface Env {
   HF_TOKEN: string;
   HF_MODEL?: string;
+  ALLOWED_ORIGINS?: string;
+  RATE_LIMIT_PER_MINUTE?: string;
 }
 
 type MonsterResponse = {
@@ -27,34 +29,51 @@ type HfChatCompletionResponse = {
 
 const DEFAULT_HF_MODEL = "openai/gpt-oss-120b:fastest";
 const HF_CHAT_COMPLETIONS_URL = "https://router.huggingface.co/v1/chat/completions";
+const DEFAULT_RATE_LIMIT_PER_MINUTE = 20;
+const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
+    const requestId = crypto.randomUUID();
+    const origin = request.headers.get("Origin");
 
     if (request.method === "OPTIONS") {
+      if (!isOriginAllowed(origin, env.ALLOWED_ORIGINS)) {
+        return json({ error: "Origin not allowed", requestId }, 403, requestId);
+      }
       return new Response(null, {
         status: 204,
-        headers: corsHeaders()
+        headers: corsHeaders(requestId)
       });
     }
 
     if (request.method === "GET" && url.pathname === "/health") {
-      return json({ ok: true });
+      return json({ ok: true, requestId }, 200, requestId);
     }
 
     if (request.method !== "POST" || url.pathname !== "/analyze") {
-      return json({ error: "Not found" }, 404);
+      return json({ error: "Not found", requestId }, 404, requestId);
     }
 
     try {
+      if (!isOriginAllowed(origin, env.ALLOWED_ORIGINS)) {
+        return json({ error: "Origin not allowed", requestId }, 403, requestId);
+      }
+
       if (!env.HF_TOKEN) {
-        return json({ error: "Server missing HF_TOKEN" }, 500);
+        return json({ error: "Server missing HF_TOKEN", requestId }, 500, requestId);
+      }
+
+      const clientIp = request.headers.get("CF-Connecting-IP") || "unknown";
+      const limitPerMinute = parseRateLimit(env.RATE_LIMIT_PER_MINUTE);
+      if (!consumeRateLimit(clientIp, limitPerMinute)) {
+        return json({ error: "Rate limit exceeded", requestId }, 429, requestId);
       }
 
       const body = (await request.json()) as { imageBase64?: string };
       if (!body?.imageBase64) {
-        return json({ error: "Missing imageBase64" }, 400);
+        return json({ error: "Missing imageBase64", requestId }, 400, requestId);
       }
 
       const dataUrl = `data:image/jpeg;base64,${body.imageBase64}`;
@@ -69,14 +88,15 @@ export default {
       const aiResult = await runHfVisionModel(env, systemPrompt, dataUrl);
       const modelPayload = extractHfMessageContent(aiResult);
       if (modelPayload == null) {
-        return json({ error: "Hugging Face returned empty content" }, 502);
+        return json({ error: "Hugging Face returned empty content", requestId }, 502, requestId);
       }
 
       const monster = normalizeMonster(parseMonsterJson(modelPayload));
-      return json(monster);
+      return json(monster, 200, requestId);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unknown worker error";
-      return json({ error: message }, 500);
+      console.error("[analyze_error]", { requestId, message });
+      return json({ error: message, requestId }, 500, requestId);
     }
   }
 };
@@ -208,17 +228,59 @@ function tryParseJson(text: string): unknown | null {
   }
 }
 
-function json(data: unknown, status = 200): Response {
+function json(data: unknown, status = 200, requestId?: string): Response {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders() }
+    headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders(requestId) }
   });
 }
 
-function corsHeaders(): HeadersInit {
-  return {
+function corsHeaders(requestId?: string): HeadersInit {
+  const headers: Record<string, string> = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "Content-Type",
     "Access-Control-Allow-Methods": "GET,POST,OPTIONS"
   };
+
+  if (requestId) {
+    headers["X-Request-Id"] = requestId;
+  }
+
+  return headers;
+}
+
+function isOriginAllowed(origin: string | null, allowedOriginsRaw?: string): boolean {
+  if (!allowedOriginsRaw || !allowedOriginsRaw.trim()) return true;
+  if (!origin) return false;
+
+  const allowed = allowedOriginsRaw
+    .split(",")
+    .map((v) => v.trim())
+    .filter((v) => v.length > 0);
+
+  return allowed.includes(origin);
+}
+
+function parseRateLimit(value?: string): number {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) return DEFAULT_RATE_LIMIT_PER_MINUTE;
+  return Math.floor(parsed);
+}
+
+function consumeRateLimit(key: string, limitPerMinute: number): boolean {
+  const now = Date.now();
+  const windowMs = 60_000;
+  const existing = rateLimitStore.get(key);
+
+  if (!existing || now >= existing.resetAt) {
+    rateLimitStore.set(key, { count: 1, resetAt: now + windowMs });
+    return true;
+  }
+
+  if (existing.count >= limitPerMinute) {
+    return false;
+  }
+
+  existing.count += 1;
+  return true;
 }
