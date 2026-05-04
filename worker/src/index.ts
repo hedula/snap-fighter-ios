@@ -50,21 +50,7 @@ export default {
         '{"name":"2~6字中文","element":"火|水|草|電|暗|一般","hp":50~100,"atk":30~80,"def":20~60,"skill":"10~20字中文"}'
       ].join("\n");
 
-      const aiResult = await env.AI.run("@cf/meta/llama-3.2-11b-vision-instruct", {
-        messages: [
-          { role: "system", content: systemPrompt },
-          {
-            role: "user",
-            content: [
-              { type: "text", text: "agree" },
-              { type: "image_url", image_url: { url: dataUrl } },
-              { type: "text", text: "請依照 schema 回傳 JSON。" }
-            ]
-          }
-        ],
-        max_tokens: 300,
-        temperature: 0.7
-      });
+      const aiResult = await runVisionModelWithAutoAgree(env, systemPrompt, dataUrl);
 
       const text = extractText(aiResult);
       if (!text) {
@@ -79,6 +65,37 @@ export default {
     }
   }
 };
+
+async function runVisionModelWithAutoAgree(env: Env, systemPrompt: string, dataUrl: string): Promise<unknown> {
+  try {
+    return await runVisionModel(env, systemPrompt, dataUrl);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (!message.includes("5016")) {
+      throw error;
+    }
+    // One-time license gate for this account/model.
+    await env.AI.run("@cf/meta/llama-3.2-11b-vision-instruct", { prompt: "agree" });
+    return await runVisionModel(env, systemPrompt, dataUrl);
+  }
+}
+
+async function runVisionModel(env: Env, systemPrompt: string, dataUrl: string): Promise<unknown> {
+  return await env.AI.run("@cf/meta/llama-3.2-11b-vision-instruct", {
+    messages: [
+      { role: "system", content: systemPrompt },
+      {
+        role: "user",
+        content: [
+          { type: "image_url", image_url: { url: dataUrl } },
+          { type: "text", text: "請依照 schema 回傳 JSON。" }
+        ]
+      }
+    ],
+    max_tokens: 300,
+    temperature: 0.7
+  });
+}
 
 function extractText(result: unknown): string | null {
   if (!result || typeof result !== "object") return null;
