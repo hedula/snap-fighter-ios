@@ -7,3 +7,11 @@ DerivedData/
 
 # Cloudflare Worker local env
 worker/.dev.vars
+worker/.wrangler/
+
+# Local agent/project notes
+.claude/
+.development_document/
+
+# macOS
+.DS_Store

@@ -21,8 +21,14 @@ Response body (MonsterResponse):
 }
 ```
 
+## Runtime Config
+- `HF_TOKEN` (required): Hugging Face token with Inference Providers permission.
+- `HF_MODEL` (optional): default `openai/gpt-oss-120b:fastest`.
+
 ## Deploy
 1. `cd worker`
 2. `npx wrangler login`
-3. `npx wrangler deploy`
-4. Copy deployment URL and set `Snap Fighter/Config.swift` `workerAnalyzeEndpoint`
+3. `npx wrangler secret put HF_TOKEN`
+4. (optional) `npx wrangler secret put HF_MODEL`
+5. `npx wrangler deploy`
+6. Copy deployment URL and set `Snap Fighter/Config.swift` `workerAnalyzeEndpoint`
