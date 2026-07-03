@@ -1,6 +1,5 @@
 export interface Env {
-  HF_TOKEN: string;
-  HF_MODEL?: string;
+  AI: Ai;
   ALLOWED_ORIGINS?: string;
   RATE_LIMIT_PER_MINUTE?: string;
 }
@@ -14,21 +13,12 @@ type MonsterResponse = {
   skill: string;
 };
 
-type HfChatCompletionResponse = {
-  choices?: Array<{
-    message?: {
-      content?: unknown;
-    };
-  }>;
-  error?: {
-    message?: string;
-    type?: string;
-    code?: string | number;
-  };
+type WorkersAiResponse = {
+  response?: unknown;
 };
 
-const DEFAULT_HF_MODEL = "openai/gpt-oss-120b:fastest";
-const HF_CHAT_COMPLETIONS_URL = "https://router.huggingface.co/v1/chat/completions";
+const DEFAULT_VISION_MODEL = "@cf/meta/llama-3.2-11b-vision-instruct";
+const MAX_ANALYZE_ATTEMPTS = 2;
 const DEFAULT_RATE_LIMIT_PER_MINUTE = 20;
 const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
 
@@ -39,7 +29,7 @@ export default {
     const origin = request.headers.get("Origin");
 
     if (request.method === "OPTIONS") {
-      if (!isOriginAllowed(origin, env.ALLOWED_ORIGINS)) {
+      if (!isOriginAllowed(origin, env.ALLOWED_ORIGINS, true)) {
         return json({ error: "Origin not allowed", requestId }, 403, requestId);
       }
       return new Response(null, {
@@ -61,10 +51,6 @@ export default {
         return json({ error: "Origin not allowed", requestId }, 403, requestId);
       }
 
-      if (!env.HF_TOKEN) {
-        return json({ error: "Server missing HF_TOKEN", requestId }, 500, requestId);
-      }
-
       const clientIp = request.headers.get("CF-Connecting-IP") || "unknown";
       const limitPerMinute = parseRateLimit(env.RATE_LIMIT_PER_MINUTE);
       if (!consumeRateLimit(clientIp, limitPerMinute)) {
@@ -76,23 +62,19 @@ export default {
         return json({ error: "Missing imageBase64", requestId }, 400, requestId);
       }
 
-      const dataUrl = `data:image/jpeg;base64,${body.imageBase64}`;
-      const systemPrompt = [
-        "你是一個奇幻角色生成器。",
-        "分析圖片中最明顯的物體，將它擬人化為一個戰鬥角色。",
-        "你必須只輸出 JSON，且不得輸出 markdown。",
-        "JSON schema:",
-        '{"name":"2~6字中文","element":"火|水|草|電|暗|一般","hp":50~100,"atk":30~80,"def":20~60,"skill":"10~20字中文"}'
-      ].join("\n");
+      const image = `data:image/jpeg;base64,${body.imageBase64}`;
+      const rawMonster = await analyzeMonsterWithRetry(env, image, requestId);
+      const monster = normalizeMonster(rawMonster);
 
-      const aiResult = await runHfVisionModel(env, systemPrompt, dataUrl);
-      const modelPayload = extractHfMessageContent(aiResult);
-      if (modelPayload == null) {
-        return json({ error: "Hugging Face returned empty content", requestId }, 502, requestId);
-      }
+      console.info("[workers_ai_analyze_success]", {
+        requestId,
+        model: DEFAULT_VISION_MODEL
+      });
 
-      const monster = normalizeMonster(parseMonsterJson(modelPayload));
-      return json(monster, 200, requestId);
+      return json(monster, 200, requestId, {
+        "X-AI-Provider": "workers-ai",
+        "X-AI-Model": DEFAULT_VISION_MODEL
+      });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unknown worker error";
       console.error("[analyze_error]", { requestId, message });
@@ -101,71 +83,88 @@ export default {
   }
 };
 
-async function runHfVisionModel(env: Env, systemPrompt: string, dataUrl: string): Promise<HfChatCompletionResponse> {
-  const model = env.HF_MODEL || DEFAULT_HF_MODEL;
+async function analyzeMonsterWithRetry(env: Env, image: string, requestId: string): Promise<unknown> {
+  let lastError: Error | null = null;
 
-  const response = await fetch(HF_CHAT_COMPLETIONS_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${env.HF_TOKEN}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      model,
-      messages: [
-        { role: "system", content: systemPrompt },
-        {
-          role: "user",
-          content: [
-            { type: "image_url", image_url: { url: dataUrl } },
-            { type: "text", text: "請依照 schema 回傳 JSON。" }
-          ]
-        }
-      ],
-      max_tokens: 300,
-      temperature: 0.7
-    })
-  });
+  for (let attempt = 1; attempt <= MAX_ANALYZE_ATTEMPTS; attempt += 1) {
+    try {
+      const modelPayload = await runWorkersAiVisionModel(env, image, attempt);
+      return parseMonsterJson(modelPayload);
+    } catch (error) {
+      const normalized = error instanceof Error ? error : new Error("Unknown Workers AI parse error");
+      lastError = normalized;
 
-  const rawText = await response.text();
-  const parsed = tryParseJson(rawText) as HfChatCompletionResponse | null;
+      console.warn("[workers_ai_analyze_retry]", {
+        requestId,
+        attempt,
+        maxAttempts: MAX_ANALYZE_ATTEMPTS,
+        message: normalized.message
+      });
 
-  if (!response.ok) {
-    const providerMessage = parsed?.error?.message || rawText || `HTTP ${response.status}`;
-    throw new Error(`HF API ${response.status}: ${providerMessage}`);
-  }
-
-  if (!parsed) {
-    throw new Error("HF API returned non-JSON response");
-  }
-
-  return parsed;
-}
-
-function extractHfMessageContent(result: HfChatCompletionResponse): unknown {
-  const content = result.choices?.[0]?.message?.content;
-  if (content == null) return null;
-
-  if (typeof content === "string") {
-    return content;
-  }
-
-  if (Array.isArray(content)) {
-    const textParts = content
-      .map((part) => {
-        if (!part || typeof part !== "object") return null;
-        const p = part as { type?: unknown; text?: unknown };
-        if (p.type === "text" && typeof p.text === "string") return p.text;
-        return null;
-      })
-      .filter((v): v is string => typeof v === "string");
-
-    if (textParts.length > 0) {
-      return textParts.join("\n");
+      if (attempt >= MAX_ANALYZE_ATTEMPTS || !isRetryableModelOutputError(normalized)) {
+        throw normalized;
+      }
     }
   }
 
-  return content;
+  throw lastError ?? new Error("Workers AI analyze retry exhausted");
+}
+
+async function runWorkersAiVisionModel(env: Env, image: string, attempt: number): Promise<unknown> {
+  const messages = [
+    { role: "system", content: buildSystemPrompt(attempt) },
+    { role: "user", content: buildUserPrompt(attempt) }
+  ];
+
+  const result = await env.AI.run(DEFAULT_VISION_MODEL, {
+    messages,
+    image,
+    max_tokens: 300,
+    temperature: attempt == 1 ? 0.2 : 0.1
+  }) as WorkersAiResponse;
+
+  const payload = extractWorkersAiText(result);
+  if (payload == null) {
+    throw new Error("Workers AI returned empty content");
+  }
+
+  return payload;
+}
+
+function buildSystemPrompt(attempt: number): string {
+  const prompt = [
+    "你是一個奇幻角色生成器。",
+    "分析圖片中最明顯的物體，將它擬人化為一個戰鬥角色。",
+    "你必須只輸出 JSON，且不得輸出 markdown。",
+    "不得輸出額外說明、前言、註解。",
+    "JSON schema:",
+    '{"name":"2~6字中文","element":"火|水|草|電|暗|一般","hp":50~100,"atk":30~80,"def":20~60,"skill":"10~20字中文"}',
+    "skill 請保持精簡，避免超過 16 個中文字。"
+  ];
+
+  if (attempt > 1) {
+    prompt.push("這是重試。請特別確保 JSON 完整閉合，所有字串都正確加上雙引號並結尾。");
+  }
+
+  return prompt.join("\n");
+}
+
+function buildUserPrompt(attempt: number): string {
+  if (attempt > 1) {
+    return "上一次輸出格式不完整。這次請只回傳一行完整 JSON，禁止換行與禁止 markdown。";
+  }
+  return "請依照 schema 回傳 JSON。";
+}
+
+function extractWorkersAiText(result: WorkersAiResponse): unknown | null {
+  const response = result.response;
+  if (typeof response === "string") {
+    return response;
+  }
+  if (response && typeof response === "object") {
+    return response;
+  }
+  return null;
 }
 
 function parseMonsterJson(payload: unknown): unknown {
@@ -174,7 +173,7 @@ function parseMonsterJson(payload: unknown): unknown {
   }
 
   if (typeof payload !== "string") {
-    throw new Error("Model output is not a string/object JSON payload");
+    throw new Error("Workers AI output is not a string/object JSON payload");
   }
 
   const cleaned = payload
@@ -183,6 +182,14 @@ function parseMonsterJson(payload: unknown): unknown {
     .trim();
 
   return JSON.parse(cleaned);
+}
+
+function isRetryableModelOutputError(error: Error): boolean {
+  const message = error.message.toLowerCase();
+  return message.includes("unterminated string")
+    || message.includes("unexpected end of json input")
+    || message.includes("expected ',' or '}'")
+    || message.includes("workers ai returned empty content");
 }
 
 function normalizeMonster(raw: unknown): MonsterResponse {
@@ -220,18 +227,14 @@ function clampString(value: unknown, fallback: string, minLen: number, maxLen: n
   return trimmed.slice(0, maxLen);
 }
 
-function tryParseJson(text: string): unknown | null {
-  try {
-    return JSON.parse(text);
-  } catch {
-    return null;
-  }
-}
-
-function json(data: unknown, status = 200, requestId?: string): Response {
+function json(data: unknown, status = 200, requestId?: string, extraHeaders?: HeadersInit): Response {
   return new Response(JSON.stringify(data), {
     status,
-    headers: { "Content-Type": "application/json; charset=utf-8", ...corsHeaders(requestId) }
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      ...corsHeaders(requestId),
+      ...(extraHeaders || {})
+    }
   });
 }
 
@@ -249,9 +252,9 @@ function corsHeaders(requestId?: string): HeadersInit {
   return headers;
 }
 
-function isOriginAllowed(origin: string | null, allowedOriginsRaw?: string): boolean {
+function isOriginAllowed(origin: string | null, allowedOriginsRaw?: string, isPreflight = false): boolean {
   if (!allowedOriginsRaw || !allowedOriginsRaw.trim()) return true;
-  if (!origin) return false;
+  if (!origin) return !isPreflight;
 
   const allowed = allowedOriginsRaw
     .split(",")

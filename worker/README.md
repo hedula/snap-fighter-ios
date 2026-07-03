@@ -22,20 +22,27 @@ Response body (MonsterResponse):
 ```
 
 ## Runtime Config
-- `HF_TOKEN` (required): Hugging Face token with Inference Providers permission.
-- `HF_MODEL` (optional): default `openai/gpt-oss-120b:fastest`.
+- Cloudflare Workers AI binding `AI` (required): configured in `wrangler.toml`.
+- Default model: `@cf/meta/llama-3.2-11b-vision-instruct`.
+- Before first use, you must agree to Meta's license once for this account.
 - `RATE_LIMIT_PER_MINUTE` (optional): default `20`.
-- `ALLOWED_ORIGINS` (optional): comma-separated allowed origins, e.g. `https://example.com,https://app.example.com`.
+- `ALLOWED_ORIGINS` (optional): comma-separated allowed browser origins, e.g. `https://example.com,https://app.example.com`. Native app requests without an `Origin` header remain allowed.
+
+## Response Diagnostics
+- Successful `POST /analyze` responses include `X-AI-Provider: workers-ai`.
+- Successful `POST /analyze` responses include `X-AI-Model: @cf/meta/llama-3.2-11b-vision-instruct`.
+- Worker logs include success records under `[workers_ai_analyze_success]`.
+- If Workers AI returns malformed or truncated JSON on the first attempt, the worker automatically retries once with a stricter JSON-only prompt.
 
 ## Deploy
 1. `cd worker`
 2. `npx wrangler login`
-3. `npx wrangler secret put HF_TOKEN`
-4. (optional) `npx wrangler secret put HF_MODEL`
-5. (optional) `npx wrangler secret put RATE_LIMIT_PER_MINUTE`
-6. (optional) `npx wrangler secret put ALLOWED_ORIGINS`
-7. `npx wrangler deploy`
-8. Copy deployment URL and set Xcode build setting `INFOPLIST_KEY_WORKER_ANALYZE_ENDPOINT`
+3. Agree to the Meta license once:
+   `curl https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/ai/run/@cf/meta/llama-3.2-11b-vision-instruct -X POST -H "Authorization: Bearer $CLOUDFLARE_AUTH_TOKEN" -d '{ "prompt": "agree" }'`
+4. (optional) `npx wrangler secret put RATE_LIMIT_PER_MINUTE`
+5. (optional) `npx wrangler secret put ALLOWED_ORIGINS`
+6. `npx wrangler deploy`
+7. Copy deployment URL and set Xcode build setting `INFOPLIST_KEY_WORKER_ANALYZE_ENDPOINT`
 
 ## Quick Verify
 ```bash
