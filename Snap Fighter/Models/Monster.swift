@@ -7,6 +7,44 @@ enum ArtworkPreference: String, Codable {
     case cutout
 }
 
+enum BattleSkillType: String, Codable, CaseIterable {
+    case powerStrike
+    case fortify
+    case siphonStrike
+
+    init(apiValue: String?, skillName: String) {
+        if let apiValue, let type = BattleSkillType(rawValue: apiValue) {
+            self = type
+            return
+        }
+
+        let defensiveKeywords = ["盾", "守", "護", "障", "壁"]
+        if defensiveKeywords.contains(where: { skillName.contains($0) }) {
+            self = .fortify
+            return
+        }
+
+        let siphonKeywords = ["吸", "癒", "治", "生", "根", "潮"]
+        if siphonKeywords.contains(where: { skillName.contains($0) }) {
+            self = .siphonStrike
+            return
+        }
+
+        self = .powerStrike
+    }
+
+    var reserveEntryHint: String {
+        switch self {
+        case .powerStrike:
+            return "進場增傷"
+        case .fortify:
+            return "進場防禦"
+        case .siphonStrike:
+            return "進場回復"
+        }
+    }
+}
+
 struct Monster: Identifiable {
     let id: UUID
     let name: String
@@ -15,6 +53,7 @@ struct Monster: Identifiable {
     let atk: Int
     let def: Int
     let skill: String
+    let skillType: BattleSkillType
     let capturedImage: UIImage?
     let cardImage: UIImage?
     let preferredArtwork: ArtworkPreference
@@ -30,6 +69,7 @@ struct Monster: Identifiable {
         atk: Int,
         def: Int,
         skill: String,
+        skillType: BattleSkillType? = nil,
         capturedImage: UIImage? = nil,
         cardImage: UIImage? = nil,
         preferredArtwork: ArtworkPreference? = nil,
@@ -44,6 +84,7 @@ struct Monster: Identifiable {
         self.atk = atk
         self.def = def
         self.skill = skill
+        self.skillType = skillType ?? BattleSkillType(apiValue: nil, skillName: skill)
         self.capturedImage = capturedImage
         self.cardImage = cardImage
         self.preferredArtwork = preferredArtwork ?? (cardImage != nil ? .cutout : .original)
@@ -60,6 +101,7 @@ struct Monster: Identifiable {
             atk: decoded.atk,
             def: decoded.def,
             skill: decoded.skill,
+            skillType: BattleSkillType(apiValue: decoded.skillType, skillName: decoded.skill),
             capturedImage: capturedImage,
             cardImage: cardImage
         )
@@ -113,6 +155,7 @@ struct Monster: Identifiable {
             atk: nextATK,
             def: nextDEF,
             skill: skill,
+            skillType: skillType,
             capturedImage: capturedImage,
             cardImage: cardImage,
             preferredArtwork: preferredArtwork,
@@ -131,6 +174,7 @@ struct Monster: Identifiable {
             atk: atk,
             def: def,
             skill: skill,
+            skillType: skillType,
             capturedImage: capturedImage,
             cardImage: cardImage,
             preferredArtwork: preference,
@@ -240,6 +284,25 @@ struct MonsterResponse: Codable {
     let atk: Int
     let def: Int
     let skill: String
+    let skillType: String?
+
+    init(
+        name: String,
+        element: String,
+        hp: Int,
+        atk: Int,
+        def: Int,
+        skill: String,
+        skillType: String? = nil
+    ) {
+        self.name = name
+        self.element = element
+        self.hp = hp
+        self.atk = atk
+        self.def = def
+        self.skill = skill
+        self.skillType = skillType
+    }
 }
 
 struct StoredMonster: Codable {
@@ -250,6 +313,7 @@ struct StoredMonster: Codable {
     let atk: Int
     let def: Int
     let skill: String
+    let skillType: String
     let imageJPEGData: Data?
     let cardImageJPEGData: Data?
     let preferredArtwork: String
@@ -264,6 +328,7 @@ struct StoredMonster: Codable {
         case atk
         case def
         case skill
+        case skillType
         case imageJPEGData
         case cardImageJPEGData
         case preferredArtwork
@@ -279,6 +344,7 @@ struct StoredMonster: Codable {
         atk: Int,
         def: Int,
         skill: String,
+        skillType: String,
         imageJPEGData: Data?,
         cardImageJPEGData: Data?,
         preferredArtwork: String,
@@ -292,6 +358,7 @@ struct StoredMonster: Codable {
         self.atk = atk
         self.def = def
         self.skill = skill
+        self.skillType = skillType
         self.imageJPEGData = imageJPEGData
         self.cardImageJPEGData = cardImageJPEGData
         self.preferredArtwork = preferredArtwork
@@ -308,6 +375,8 @@ struct StoredMonster: Codable {
         atk = try container.decode(Int.self, forKey: .atk)
         def = try container.decode(Int.self, forKey: .def)
         skill = try container.decode(String.self, forKey: .skill)
+        skillType = try container.decodeIfPresent(String.self, forKey: .skillType)
+            ?? BattleSkillType(apiValue: nil, skillName: skill).rawValue
         imageJPEGData = try container.decodeIfPresent(Data.self, forKey: .imageJPEGData)
         cardImageJPEGData = try container.decodeIfPresent(Data.self, forKey: .cardImageJPEGData)
         preferredArtwork = try container.decodeIfPresent(String.self, forKey: .preferredArtwork)
@@ -327,6 +396,7 @@ extension Monster {
             atk: atk,
             def: def,
             skill: skill,
+            skillType: skillType,
             capturedImage: capturedImage,
             cardImage: cardImage,
             preferredArtwork: preferredArtwork,
@@ -345,6 +415,7 @@ extension Monster {
             atk: stored.atk,
             def: stored.def,
             skill: stored.skill,
+            skillType: BattleSkillType(apiValue: stored.skillType, skillName: stored.skill),
             capturedImage: stored.imageJPEGData.flatMap(UIImage.init(data:)),
             cardImage: stored.cardImageJPEGData.flatMap(UIImage.init(data:)),
             preferredArtwork: ArtworkPreference(rawValue: stored.preferredArtwork),
@@ -363,6 +434,7 @@ extension Monster {
             atk: atk,
             def: def,
             skill: skill,
+            skillType: skillType.rawValue,
             imageJPEGData: capturedImage?.jpegData(compressionQuality: 0.82),
             cardImageJPEGData: cardImage?.jpegData(compressionQuality: 0.9),
             preferredArtwork: preferredArtwork.rawValue,

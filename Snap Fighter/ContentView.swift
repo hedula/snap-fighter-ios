@@ -86,6 +86,30 @@ struct ContentView: View {
 
                 VStack(spacing: 16) {
                     battleModeCard(
+                        title: "快速開戰",
+                        subtitle: "先用系統提供的試玩牌組直接打一場，熟悉指令與主副將節奏後再抓怪。",
+                        accent: .orange,
+                        systemImage: "bolt.shield"
+                    ) {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("試玩牌組：閃焰新兵 + 潮壁見習生")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+
+                            Button {
+                                vm.prepareStarterBattle()
+                            } label: {
+                                Label("立刻試玩", systemImage: "play.fill")
+                                    .font(.headline)
+                                    .bold()
+                                    .frame(maxWidth: .infinity)
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .tint(.orange)
+                        }
+                    }
+
+                    battleModeCard(
                         title: "抓怪對戰",
                         subtitle: "現場拍攝或從照片挑圖，隨機生成兩張新卡進場。",
                         accent: .accentColor,

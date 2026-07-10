@@ -5,10 +5,12 @@ import Combine
 class GameViewModel: ObservableObject {
     typealias MonsterAnalyzer = (UIImage) async throws -> AnalysisResult
     typealias AIOpponentGenerator = ([Monster]) -> Monster
+    typealias StarterDeckFactory = () -> [Monster]
     private enum BattleContext {
         case none
         case captured
         case deckVersusAI
+        case starterTrial
     }
 
     struct BattleReward: Equatable {
@@ -36,6 +38,7 @@ class GameViewModel: ObservableObject {
     @Published private(set) var reserveMonster: Monster? = nil
     private let analyzeMonster: MonsterAnalyzer
     private let generateAIOpponent: AIOpponentGenerator
+    private let makeStarterDeck: StarterDeckFactory
     private var battleContext: BattleContext = .none
     private var deckBattleParticipantIDs: Set<Monster.ID> = []
     private let playerVictoryExperience = 40
@@ -44,11 +47,32 @@ class GameViewModel: ObservableObject {
         analyzeMonster: @escaping MonsterAnalyzer = { image in
             try await AIService.shared.analyze(image: image)
         },
-        generateAIOpponent: AIOpponentGenerator? = nil
+        generateAIOpponent: AIOpponentGenerator? = nil,
+        makeStarterDeck: StarterDeckFactory? = nil
     ) {
         self.analyzeMonster = analyzeMonster
         self.generateAIOpponent = generateAIOpponent ?? { deck in
             AIOpponentFactory.makeOpponent(against: deck)
+        }
+        self.makeStarterDeck = makeStarterDeck ?? {
+            [
+                Monster(
+                    name: "閃焰新兵",
+                    element: .fire,
+                    hp: 78,
+                    atk: 62,
+                    def: 34,
+                    skill: "烈焰突進"
+                ),
+                Monster(
+                    name: "潮壁見習生",
+                    element: .water,
+                    hp: 88,
+                    atk: 48,
+                    def: 56,
+                    skill: "潮盾守備"
+                )
+            ]
         }
     }
 
@@ -96,6 +120,21 @@ class GameViewModel: ObservableObject {
         battleReward = nil
         battleContext = .deckVersusAI
         deckBattleParticipantIDs = Set([player.id, reserveMonster?.id].compactMap { $0 })
+        state = .readyToBattle
+    }
+
+    func prepareStarterBattle() {
+        let starterDeck = makeStarterDeck()
+        guard !starterDeck.isEmpty else { return }
+
+        let player = starterDeck[0].resetForBattle()
+        let opponent = generateAIOpponent(starterDeck).resetForBattle()
+        monsters = [player, opponent]
+        reserveMonster = starterDeck.count > 1 ? starterDeck[1].resetForBattle() : nil
+        diagnostics = nil
+        battleReward = nil
+        battleContext = .starterTrial
+        deckBattleParticipantIDs = []
         state = .readyToBattle
     }
 

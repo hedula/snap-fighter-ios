@@ -94,7 +94,8 @@ final class AIService {
             hp: 75,
             atk: 60,
             def: 35,
-            skill: "沸騰之力：發動時使對方陷入灼燒狀態"
+            skill: "沸騰之力：發動時使對方陷入灼燒狀態",
+            skillType: BattleSkillType.powerStrike.rawValue
         )
         let cardImage = await isolateForeground(image)
         return AnalysisResult(

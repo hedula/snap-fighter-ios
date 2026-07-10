@@ -295,6 +295,114 @@ struct Snap_FighterTests {
         }
     }
 
+    @Test func prepareStarterBattleUsesTrialDeckAndGeneratedOpponent() {
+        let starterMain = Monster(
+            name: "試玩主將",
+            element: .fire,
+            hp: 76,
+            atk: 60,
+            def: 32,
+            skill: "烈焰突進",
+            currentHp: 12
+        )
+        let starterReserve = Monster(
+            name: "試玩副將",
+            element: .water,
+            hp: 88,
+            atk: 46,
+            def: 58,
+            skill: "潮盾守備",
+            currentHp: 9
+        )
+        let aiOpponent = Monster(
+            name: "教官機兵",
+            element: .electric,
+            hp: 84,
+            atk: 58,
+            def: 40,
+            skill: "磁暴轟擊",
+            currentHp: 4
+        )
+        let viewModel = GameViewModel(
+            analyzeMonster: { _ in
+                AnalysisResult(
+                    monster: starterMain,
+                    diagnostics: AIDiagnostics(provider: "mock", model: "preview")
+                )
+            },
+            generateAIOpponent: { deck in
+                #expect(deck.map(\.name) == ["試玩主將", "試玩副將"])
+                return aiOpponent
+            },
+            makeStarterDeck: {
+                [starterMain, starterReserve]
+            }
+        )
+        viewModel.diagnostics = AIDiagnostics(provider: "workers-ai", model: "temp")
+
+        viewModel.prepareStarterBattle()
+
+        #expect(viewModel.monsters.map(\.name) == ["試玩主將", "教官機兵"])
+        #expect(viewModel.monsters.map(\.currentHp) == [76, 84])
+        #expect(viewModel.reserveMonster?.name == "試玩副將")
+        #expect(viewModel.diagnostics == nil)
+        if case .readyToBattle = viewModel.state {
+        } else {
+            Issue.record("Expected readyToBattle state after preparing starter battle")
+        }
+    }
+
+    @Test func starterBattleVictoryDoesNotGrantPersistentReward() {
+        let starterMain = Monster(
+            name: "試玩主將",
+            element: .fire,
+            hp: 76,
+            atk: 60,
+            def: 32,
+            skill: "烈焰突進"
+        )
+        let starterReserve = Monster(
+            name: "試玩副將",
+            element: .water,
+            hp: 88,
+            atk: 46,
+            def: 58,
+            skill: "潮盾守備"
+        )
+        let aiOpponent = Monster(
+            name: "教官機兵",
+            element: .electric,
+            hp: 84,
+            atk: 58,
+            def: 40,
+            skill: "磁暴轟擊"
+        )
+        let viewModel = GameViewModel(
+            analyzeMonster: { _ in
+                AnalysisResult(
+                    monster: starterMain,
+                    diagnostics: AIDiagnostics(provider: "mock", model: "preview")
+                )
+            },
+            generateAIOpponent: { _ in aiOpponent },
+            makeStarterDeck: {
+                [starterMain, starterReserve]
+            }
+        )
+
+        viewModel.prepareStarterBattle()
+        viewModel.endBattle(winner: viewModel.monsters[0])
+
+        if case .result(let winner) = viewModel.state {
+            #expect(winner.id == starterMain.id)
+            #expect(winner.level == starterMain.level)
+            #expect(winner.experience == starterMain.experience)
+        } else {
+            Issue.record("Expected result state after starter battle resolution")
+        }
+        #expect(viewModel.battleReward == nil)
+    }
+
     @Test func updateArtworkPreferenceRefreshesShowCardState() async throws {
         let analyzedMonster = Monster(
             name: "切圖貓",
@@ -478,8 +586,8 @@ struct Snap_FighterTests {
         let result = session.performPlayerAction(.attack, damageRoll: 1.0)
 
         #expect(result?.action == .attack)
-        #expect(result?.damage == 32)
-        #expect(session.opponent.currentHp == 38)
+        #expect(result?.damage == 37)
+        #expect(session.opponent.currentHp == 33)
         #expect(session.turn == .opponent)
     }
 
@@ -492,8 +600,8 @@ struct Snap_FighterTests {
         _ = session.performPlayerAction(.defend)
         let aiResult = session.performOpponentAction(.attack, damageRoll: 1.0)
 
-        #expect(aiResult?.damage == 18)
-        #expect(session.player.currentHp == 62)
+        #expect(aiResult?.damage == 27)
+        #expect(session.player.currentHp == 53)
         #expect(session.turn == .player)
     }
 
@@ -527,7 +635,7 @@ struct Snap_FighterTests {
         _ = session.performPlayerAction(.attack, damageRoll: 1.0)
         let result = session.performOpponentAction(.skill, damageRoll: 1.0)
 
-        #expect(result?.damage == 59)
+        #expect(result?.damage == 64)
         #expect(session.player.name == "副將")
         #expect(session.reservePlayer == nil)
         #expect(session.turn == .player)
@@ -549,7 +657,7 @@ struct Snap_FighterTests {
         let result = session.performPlayerAction(.attack, damageRoll: 1.0)
 
         #expect(session.player.name == "副將")
-        #expect(result?.damage == 62)
+        #expect(result?.damage == 67)
         #expect(session.playerAttackBonus == 0)
     }
 
@@ -565,9 +673,10 @@ struct Snap_FighterTests {
         #expect(result?.damage == 0)
         #expect(session.player.currentHp == 69)
         #expect(session.turn == .opponent)
+        #expect(session.playerSkillCooldownRemaining == 1)
 
         let followUp = session.performOpponentAction(.attack, damageRoll: 1.0)
-        #expect(followUp?.damage == 13)
+        #expect(followUp?.damage == 23)
     }
 
     @Test func battleSessionSiphonSkillHealsAfterDamage() {
@@ -579,10 +688,11 @@ struct Snap_FighterTests {
         let result = session.performPlayerAction(.skill, damageRoll: 1.0)
 
         #expect(result?.action == .skill)
-        #expect(result?.damage == 31)
-        #expect(session.opponent.currentHp == 49)
-        #expect(session.player.currentHp == 65)
+        #expect(result?.damage == 39)
+        #expect(session.opponent.currentHp == 41)
+        #expect(session.player.currentHp == 69)
         #expect(session.turn == .opponent)
+        #expect(session.playerSkillCooldownRemaining == 1)
     }
 
     @Test func battleSessionElementAdvantageIncreasesDamage() {
@@ -593,9 +703,9 @@ struct Snap_FighterTests {
 
         let result = session.performPlayerAction(.attack, damageRoll: 1.0)
 
-        #expect(result?.damage == 52)
+        #expect(result?.damage == 57)
         #expect(result?.message.contains("效果絕佳。") == true)
-        #expect(session.opponent.currentHp == 18)
+        #expect(session.opponent.currentHp == 13)
     }
 
     @Test func battleSessionElementDisadvantageReducesDamage() {
@@ -606,9 +716,187 @@ struct Snap_FighterTests {
 
         let result = session.performPlayerAction(.attack, damageRoll: 1.0)
 
-        #expect(result?.damage == 32)
+        #expect(result?.damage == 37)
         #expect(result?.message.contains("效果普通偏弱。") == true)
-        #expect(session.opponent.currentHp == 38)
+        #expect(session.opponent.currentHp == 33)
+    }
+
+    @Test func battleSessionDamageFloorPreventsOnePointChipLoop() {
+        var session = BattleSession(
+            player: Monster(name: "低攻試作", element: .normal, hp: 84, atk: 48, def: 24, skill: "試作衝撞"),
+            opponent: Monster(name: "高防靶機", element: .dark, hp: 92, atk: 40, def: 61, skill: "暗影壁壘")
+        )
+
+        let result = session.performPlayerAction(.attack, damageRoll: 1.0)
+
+        #expect(result?.damage == 12)
+        #expect(result?.damage ?? 0 >= 5)
+        #expect(session.opponent.currentHp == 80)
+    }
+
+    @Test func battleSessionSkillCooldownBlocksImmediateReuse() {
+        var session = BattleSession(
+            player: Monster(name: "烈焰先鋒", element: .fire, hp: 78, atk: 40, def: 20, skill: "烈焰突進", skillType: .powerStrike),
+            opponent: Monster(name: "藤甲守衛", element: .grass, hp: 110, atk: 40, def: 28, skill: "藤牆護盾", skillType: .fortify)
+        )
+
+        let firstSkill = session.performPlayerAction(.skill, damageRoll: 1.0)
+
+        #expect(firstSkill?.message.contains("技能將冷卻 1 回合。") == true)
+        #expect(session.playerSkillCooldownRemaining == 1)
+        #expect(session.actionPresentation(for: .skill).disabledReason == "目前不可輸入。")
+
+        _ = session.performOpponentAction(.attack, damageRoll: 1.0)
+
+        #expect(session.actionPresentation(for: .skill).disabledReason == "技能冷卻中，還需 1 回合。")
+
+        _ = session.performPlayerAction(.attack, damageRoll: 1.0)
+        _ = session.performOpponentAction(.attack, damageRoll: 1.0)
+
+        #expect(session.playerSkillCooldownRemaining == 0)
+        #expect(session.actionPresentation(for: .skill).isEnabled)
+    }
+
+    @Test func monsterStoredDataPreservesExplicitSkillTypeAndFallsBackForLegacyData() throws {
+        let explicit = Monster(
+            name: "護城龜",
+            element: .water,
+            hp: 82,
+            atk: 38,
+            def: 30,
+            skill: "碧潮障壁",
+            skillType: .fortify
+        )
+
+        let encoded = try JSONEncoder().encode(explicit.stored)
+        let decodedStored = try JSONDecoder().decode(StoredMonster.self, from: encoded)
+        let decodedMonster = Monster(stored: decodedStored)
+
+        #expect(decodedMonster.skillType == .fortify)
+
+        let legacyJSON = """
+        {
+          "id":"\(UUID().uuidString)",
+          "name":"舊版根鬚獸",
+          "element":"草",
+          "hp":72,
+          "atk":46,
+          "def":28,
+          "skill":"根鬚守護",
+          "preferredArtwork":"original",
+          "level":1,
+          "experience":0
+        }
+        """.data(using: .utf8)!
+
+        let legacyStored = try JSONDecoder().decode(StoredMonster.self, from: legacyJSON)
+        let legacyMonster = Monster(stored: legacyStored)
+
+        #expect(legacyMonster.skillType == .fortify)
+    }
+
+    @Test func battleSessionExposesHudLabelsAndTags() {
+        var session = BattleSession(
+            player: Monster(name: "烈焰先鋒", element: .fire, hp: 78, atk: 52, def: 20, skill: "烈焰突進"),
+            opponent: Monster(name: "藤甲守衛", element: .grass, hp: 82, atk: 40, def: 18, skill: "藤牆護盾"),
+            reservePlayer: Monster(name: "潮壁支援", element: .water, hp: 88, atk: 46, def: 28, skill: "潮盾守備")
+        )
+
+        #expect(session.headerTitle == "你的行動回合")
+        #expect(session.turnLabel == "輪到你了")
+        #expect(session.headerTags.contains("我方屬性佔優"))
+        #expect(session.headerTags.contains("副將待命"))
+        #expect(session.playerStatusTags.contains("剋制敵方"))
+        #expect(session.opponentStatusTags.contains("被我方剋制"))
+        #expect(session.reservePlayerStatusHint == "進場防禦")
+
+        _ = session.performPlayerAction(.swap)
+
+        #expect(session.playerStatusTags.contains("防禦中"))
+        #expect(session.playerStatusTags.contains("剋制敵方") == false)
+    }
+
+    @Test func battleSessionReservePowerStrikeHintAndAttackBonusStayAligned() {
+        var session = BattleSession(
+            player: Monster(name: "潮壁守衛", element: .water, hp: 84, atk: 38, def: 26, skill: "潮盾守備"),
+            opponent: Monster(name: "熔岩角龍", element: .fire, hp: 90, atk: 48, def: 20, skill: "熔火爆裂"),
+            reservePlayer: Monster(name: "閃焰突擊手", element: .electric, hp: 76, atk: 58, def: 18, skill: "雷火突進")
+        )
+
+        #expect(session.reservePlayerStatusHint == "進場增傷")
+
+        _ = session.performPlayerAction(.swap)
+
+        #expect(session.playerAttackBonus == 8)
+        #expect(session.playerStatusTags.contains("下一擊增傷"))
+    }
+
+    @Test func battleSessionLatestEventTracksResolvedActions() {
+        var session = BattleSession(
+            player: Monster(name: "火貓", element: .fire, hp: 70, atk: 50, def: 20, skill: "火抓"),
+            opponent: Monster(name: "草獸", element: .grass, hp: 70, atk: 40, def: 10, skill: "藤擊")
+        )
+
+        #expect(session.latestEvent.title == "戰鬥開始")
+        #expect(session.latestEvent.detail == "輪到你了，選一個指令。")
+
+        let result = session.performPlayerAction(.attack, damageRoll: 1.0)
+
+        #expect(result?.message == session.latestEvent.title)
+        #expect(session.latestEvent.detail == "敵方行動中...")
+    }
+
+    @Test func battleSessionSettlementEventReplacesLatestEventAfterFinish() {
+        var session = BattleSession(
+            player: Monster(name: "終結者", element: .fire, hp: 90, atk: 90, def: 20, skill: "烈焰終擊"),
+            opponent: Monster(name: "殘血敵人", element: .grass, hp: 30, atk: 10, def: 5, skill: "藤擊", currentHp: 15)
+        )
+
+        _ = session.performPlayerAction(.attack, damageRoll: 1.0)
+        #expect(session.isFinished)
+
+        session.markSettlementEvent()
+
+        #expect(session.latestEvent.title == "終結者 獲勝！")
+        #expect(session.latestEvent.detail == "戰鬥已結束，正在結算勝者。")
+    }
+
+    @Test func battleSessionExposesActionHintsFromModel() {
+        let actionTitles = BattleAction.allCases.map(\.subtitle)
+        #expect(actionTitles.count == 4)
+        #expect(actionTitles.contains("穩定輸出，適合一般回合壓血。"))
+        #expect(actionTitles.contains("切換待命副將，並消耗你的本回合。"))
+
+        var session = BattleSession(
+            player: Monster(name: "單兵", element: .normal, hp: 70, atk: 42, def: 18, skill: "基礎衝撞"),
+            opponent: Monster(name: "敵方", element: .dark, hp: 72, atk: 44, def: 20, skill: "暗影突襲")
+        )
+
+        #expect(session.actionPanelHint == "選一個指令後推進回合")
+        #expect(session.actionPresentation(for: .swap).disabledReason == "沒有待命副將可替換。")
+
+        _ = session.performPlayerAction(.attack, damageRoll: 1.0)
+
+        #expect(session.actionPanelHint == "目前不可輸入")
+        #expect(session.actionPresentation(for: .swap).disabledReason == "沒有待命副將可替換。")
+    }
+
+    @Test func battleSessionExposesPresentationToneAndActionAvailability() {
+        var session = BattleSession(
+            player: Monster(name: "主將", element: .fire, hp: 70, atk: 44, def: 20, skill: "火抓"),
+            opponent: Monster(name: "敵方", element: .water, hp: 72, atk: 40, def: 20, skill: "水盾"),
+            reservePlayer: Monster(name: "副將", element: .grass, hp: 68, atk: 42, def: 22, skill: "藤盾")
+        )
+
+        #expect(session.presentationTone == .player)
+        #expect(session.actionPresentation(for: .attack).isEnabled)
+        #expect(session.actionPresentation(for: .swap).isEnabled)
+
+        _ = session.performPlayerAction(.attack, damageRoll: 1.0)
+
+        #expect(session.presentationTone == .opponent)
+        #expect(session.actionPresentation(for: .attack).disabledReason == "目前不可輸入。")
+        #expect(session.actionPresentation(for: .swap).disabledReason == "只有在你的回合才能換副將。")
     }
 
     private func makeImage(color: UIColor, size: CGSize) -> UIImage {

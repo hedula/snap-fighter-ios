@@ -34,6 +34,19 @@ enum BattleAction: CaseIterable, Equatable {
         case .swap: return "arrow.triangle.2.circlepath"
         }
     }
+
+    var subtitle: String {
+        switch self {
+        case .attack:
+            return "穩定輸出，適合一般回合壓血。"
+        case .skill:
+            return "依技能類型觸發，可能偏爆發、防禦或吸收。"
+        case .defend:
+            return "減少下一次受擊傷害，適合撐過敵方強攻。"
+        case .swap:
+            return "切換待命副將，並消耗你的本回合。"
+        }
+    }
 }
 
 struct BattleResolvedAction: Equatable {
@@ -44,11 +57,36 @@ struct BattleResolvedAction: Equatable {
     let message: String
 }
 
+struct BattleEventPresentation: Equatable {
+    let title: String
+    let detail: String?
+}
+
+enum BattlePresentationTone: Equatable {
+    case player
+    case opponent
+    case finished
+}
+
+struct BattleActionPresentation: Equatable {
+    let action: BattleAction
+    let isEnabled: Bool
+    let disabledReason: String?
+}
+
 struct BattleSession {
-    private enum BattleSkillTemplate {
-        case powerStrike
-        case fortify
-        case siphonStrike
+    private enum BattleDamageProfile {
+        case attack
+        case skill
+
+        var pressureFloorRatio: Double {
+            switch self {
+            case .attack:
+                return 0.12
+            case .skill:
+                return 0.18
+            }
+        }
     }
 
     private(set) var player: Monster
@@ -57,10 +95,14 @@ struct BattleSession {
     private(set) var turn: BattleTurn
     private(set) var statusText: String
     private(set) var winner: Monster?
+    private(set) var latestEvent: BattleEventPresentation
 
     private(set) var playerDefenseActive = false
     private(set) var opponentDefenseActive = false
     private(set) var playerAttackBonus = 0
+    private(set) var playerSkillCooldownRemaining = 0
+    private(set) var reservePlayerSkillCooldownRemaining = 0
+    private(set) var opponentSkillCooldownRemaining = 0
 
     init(player: Monster, opponent: Monster, reservePlayer: Monster? = nil) {
         self.player = player
@@ -68,6 +110,7 @@ struct BattleSession {
         self.reservePlayer = reservePlayer
         self.turn = .player
         self.statusText = "輪到你了，選一個指令。"
+        self.latestEvent = BattleEventPresentation(title: "戰鬥開始", detail: "輪到你了，選一個指令。")
     }
 
     var isFinished: Bool {
@@ -82,17 +125,164 @@ struct BattleSession {
         canPlayerAct && reservePlayer != nil
     }
 
+    var presentationTone: BattlePresentationTone {
+        switch turn {
+        case .player:
+            return .player
+        case .opponent:
+            return .opponent
+        case .finished:
+            return .finished
+        }
+    }
+
+    var headerTitle: String {
+        if isFinished {
+            return "戰鬥結束"
+        }
+
+        return turn == .player ? "你的行動回合" : "敵方出招中"
+    }
+
+    var turnLabel: String {
+        if isFinished {
+            return "戰鬥結束"
+        }
+
+        return turn == .player ? "輪到你了" : "敵方行動中"
+    }
+
+    var headerTags: [String] {
+        var tags: [String] = []
+
+        if player.element.hasBattleAdvantage(against: opponent.element) {
+            tags.append("我方屬性佔優")
+        } else if opponent.element.hasBattleAdvantage(against: player.element) {
+            tags.append("敵方屬性佔優")
+        }
+
+        if reservePlayer != nil {
+            tags.append("副將待命")
+        }
+
+        if playerDefenseActive || opponentDefenseActive {
+            tags.append("有人防禦中")
+        }
+
+        return Array(tags.prefix(2))
+    }
+
+    var playerStatusTags: [String] {
+        var tags: [String] = []
+
+        if playerDefenseActive {
+            tags.append("防禦中")
+        }
+
+        if playerAttackBonus > 0 {
+            tags.append("下一擊增傷")
+        }
+
+        if playerSkillCooldownRemaining > 0 {
+            tags.append("技能冷卻 \(playerSkillCooldownRemaining)")
+        }
+
+        if player.element.hasBattleAdvantage(against: opponent.element) {
+            tags.append("剋制敵方")
+        } else if opponent.element.hasBattleAdvantage(against: player.element) {
+            tags.append("被敵方剋制")
+        }
+
+        return tags
+    }
+
+    var opponentStatusTags: [String] {
+        var tags: [String] = []
+
+        if opponentDefenseActive {
+            tags.append("防禦中")
+        }
+
+        if opponentSkillCooldownRemaining > 0 {
+            tags.append("技能冷卻 \(opponentSkillCooldownRemaining)")
+        }
+
+        if opponent.element.hasBattleAdvantage(against: player.element) {
+            tags.append("剋制我方")
+        } else if player.element.hasBattleAdvantage(against: opponent.element) {
+            tags.append("被我方剋制")
+        }
+
+        return tags
+    }
+
+    var reservePlayerStatusHint: String? {
+        guard let reservePlayer else { return nil }
+        return reservePlayer.skillType.reserveEntryHint
+    }
+
+    var actionPanelHint: String {
+        if isFinished {
+            return "等待結算"
+        }
+
+        return turn == .player ? "選一個指令後推進回合" : "目前不可輸入"
+    }
+
+    func actionPresentation(for action: BattleAction) -> BattleActionPresentation {
+        let disabledReason: String?
+
+        switch action {
+        case .skill:
+            if isFinished {
+                disabledReason = "戰鬥已結束。"
+            } else if turn != .player {
+                disabledReason = "目前不可輸入。"
+            } else if playerSkillCooldownRemaining > 0 {
+                disabledReason = "技能冷卻中，還需 \(playerSkillCooldownRemaining) 回合。"
+            } else {
+                disabledReason = nil
+            }
+        case .swap:
+            if reservePlayer == nil {
+                disabledReason = "沒有待命副將可替換。"
+            } else if turn != .player {
+                disabledReason = "只有在你的回合才能換副將。"
+            } else if isFinished {
+                disabledReason = "戰鬥已結束。"
+            } else {
+                disabledReason = nil
+            }
+        default:
+            if isFinished {
+                disabledReason = "戰鬥已結束。"
+            } else if turn != .player {
+                disabledReason = "目前不可輸入。"
+            } else {
+                disabledReason = nil
+            }
+        }
+
+        return BattleActionPresentation(
+            action: action,
+            isEnabled: disabledReason == nil,
+            disabledReason: disabledReason
+        )
+    }
+
     mutating func performPlayerAction(_ action: BattleAction, damageRoll: Double = 1.0) -> BattleResolvedAction? {
         guard canPlayerAct else { return nil }
-        return perform(action, actor: .player, damageRoll: damageRoll)
+        let result = perform(action, actor: .player, damageRoll: damageRoll)
+        latestEvent = eventPresentation(for: result)
+        return result
     }
 
     mutating func chooseOpponentAction(randomValue: Double = Double.random(in: 0...1)) -> BattleAction {
         guard turn == .opponent, !isFinished else { return .attack }
-        let skillTemplate = skillTemplate(for: opponent)
+        let canUseSkill = opponentSkillCooldownRemaining == 0
 
         if opponent.currentHp <= max(18, opponent.hp / 3) {
-            if skillTemplate == .fortify, randomValue < 0.6 {
+            if canUseSkill, opponent.skillType == .fortify, randomValue < 0.6 {
                 return .skill
             }
 
@@ -101,12 +291,29 @@ struct BattleSession {
             }
         }
 
+        if !canUseSkill {
+            return randomValue < 0.8 ? .attack : .defend
+        }
+
         return randomValue < 0.72 ? .attack : .skill
     }
 
     mutating func performOpponentAction(_ action: BattleAction, damageRoll: Double = 1.0) -> BattleResolvedAction? {
         guard turn == .opponent, !isFinished else { return nil }
-        return perform(action, actor: .opponent, damageRoll: damageRoll)
+        let result = perform(action, actor: .opponent, damageRoll: damageRoll)
+        latestEvent = eventPresentation(for: result)
+        return result
+    }
+
+    var settlementEvent: BattleEventPresentation {
+        BattleEventPresentation(
+            title: statusText,
+            detail: isFinished ? "戰鬥已結束，正在結算勝者。" : statusText
+        )
+    }
+
+    mutating func markSettlementEvent() {
+        latestEvent = settlementEvent
     }
 
     private mutating func perform(_ action: BattleAction, actor: BattleActor, damageRoll: Double) -> BattleResolvedAction {
@@ -116,6 +323,7 @@ struct BattleSession {
                 from: actor,
                 action: action,
                 actionDisplayName: action.title,
+                profile: .attack,
                 multiplier: 1.0,
                 flatBonus: 0,
                 damageRoll: damageRoll
@@ -133,6 +341,7 @@ struct BattleSession {
         from actor: BattleActor,
         action: BattleAction,
         actionDisplayName: String,
+        profile: BattleDamageProfile,
         multiplier: Double,
         flatBonus: Int,
         damageRoll: Double
@@ -144,11 +353,12 @@ struct BattleSession {
         let elementMultiplier = attacker.element.battleMultiplier(against: defender.element)
         let attackBonus = actor == .player ? playerAttackBonus : 0
 
-        let baseDamage = max(
-            1,
-            Int((Double(attacker.atk + flatBonus + attackBonus) * multiplier * damageRoll * elementMultiplier).rounded(.down)) - defender.def
-        )
-        let finalDamage = defenseActive ? max(1, baseDamage / 2) : baseDamage
+        let scaledAttack = Double(attacker.atk + flatBonus + attackBonus) * multiplier * damageRoll * elementMultiplier
+        let softenedDefense = Double(defender.def) * 0.55
+        let pressureFloor = max(4, Int(ceil(Double(defender.hp) * profile.pressureFloorRatio)))
+        let baseDamage = max(pressureFloor, Int(scaledAttack.rounded(.down)) - Int(softenedDefense.rounded(.down)))
+        let defendedFloor = max(2, Int(ceil(Double(defender.hp) * 0.06)))
+        let finalDamage = defenseActive ? max(defendedFloor, Int((Double(baseDamage) * 0.6).rounded(.down))) : baseDamage
 
         if actor == .player {
             playerAttackBonus = 0
@@ -182,6 +392,8 @@ struct BattleSession {
                 let fallenName = player.name
                 player = reserve
                 reservePlayer = nil
+                playerSkillCooldownRemaining = reservePlayerSkillCooldownRemaining
+                reservePlayerSkillCooldownRemaining = 0
                 playerDefenseActive = false
                 turn = .player
                 statusText = "\(player.name) 已接替上場，輪到你了。"
@@ -198,6 +410,8 @@ struct BattleSession {
             statusText = turn == .player ? "輪到你了，選一個指令。" : "敵方行動中..."
         }
 
+        advanceCooldowns(after: action, actor: actor)
+
         return BattleResolvedAction(
             actor: actor,
             action: action,
@@ -209,22 +423,31 @@ struct BattleSession {
 
     private mutating func performSkill(from actor: BattleActor, damageRoll: Double) -> BattleResolvedAction {
         let attacker = actor == .player ? player : opponent
-        let template = skillTemplate(for: attacker)
+        let template = attacker.skillType
 
         switch template {
         case .powerStrike:
-            return dealDamage(
+            var result = dealDamage(
                 from: actor,
                 action: .skill,
                 actionDisplayName: attacker.skill,
+                profile: .skill,
                 multiplier: 1.3,
                 flatBonus: 8,
                 damageRoll: damageRoll
             )
+            startSkillCooldown(for: actor)
+            result = refreshedEventResult(from: result, actor: actor)
+            return result
         case .fortify:
-            return fortify(from: actor)
+            let result = fortify(from: actor)
+            startSkillCooldown(for: actor)
+            return refreshedEventResult(from: result, actor: actor)
         case .siphonStrike:
-            return siphonStrike(from: actor, damageRoll: damageRoll)
+            var result = siphonStrike(from: actor, damageRoll: damageRoll)
+            startSkillCooldown(for: actor)
+            result = refreshedEventResult(from: result, actor: actor)
+            return result
         }
     }
 
@@ -290,6 +513,7 @@ struct BattleSession {
             from: actor,
             action: .skill,
             actionDisplayName: attackerBefore.skill,
+            profile: .skill,
             multiplier: 1.0,
             flatBonus: 4,
             damageRoll: damageRoll
@@ -340,8 +564,11 @@ struct BattleSession {
         }
 
         let previousPlayer = player
+        let previousPlayerCooldown = playerSkillCooldownRemaining
         player = reserve
         reservePlayer = previousPlayer
+        playerSkillCooldownRemaining = reservePlayerSkillCooldownRemaining
+        reservePlayerSkillCooldownRemaining = previousPlayerCooldown
         playerDefenseActive = false
         turn = .opponent
         statusText = "敵方行動中..."
@@ -357,7 +584,7 @@ struct BattleSession {
     }
 
     private mutating func applyReserveEntryEffect() -> String {
-        switch skillTemplate(for: player) {
+        switch player.skillType {
         case .powerStrike:
             playerAttackBonus += 8
             return "\(player.name) 的進場氣勢提升，下一次攻擊傷害上升。"
@@ -379,17 +606,55 @@ struct BattleSession {
         }
     }
 
-    private func skillTemplate(for monster: Monster) -> BattleSkillTemplate {
-        let defensiveKeywords = ["盾", "守", "護", "障", "壁"]
-        if defensiveKeywords.contains(where: { monster.skill.contains($0) }) {
-            return .fortify
-        }
+    private func eventPresentation(for result: BattleResolvedAction) -> BattleEventPresentation {
+        BattleEventPresentation(
+            title: result.message,
+            detail: statusText
+        )
+    }
 
-        let siphonKeywords = ["吸", "癒", "治", "生", "根", "潮"]
-        if siphonKeywords.contains(where: { monster.skill.contains($0) }) {
-            return .siphonStrike
+    private mutating func startSkillCooldown(for actor: BattleActor) {
+        switch actor {
+        case .player:
+            playerSkillCooldownRemaining = 1
+        case .opponent:
+            opponentSkillCooldownRemaining = 1
         }
+    }
 
-        return .powerStrike
+    private mutating func advanceCooldowns(after action: BattleAction, actor: BattleActor) {
+        guard action != .skill else { return }
+
+        switch actor {
+        case .player:
+            if playerSkillCooldownRemaining > 0 {
+                playerSkillCooldownRemaining -= 1
+            }
+        case .opponent:
+            if opponentSkillCooldownRemaining > 0 {
+                opponentSkillCooldownRemaining -= 1
+            }
+        }
+    }
+
+    private mutating func refreshedEventResult(from result: BattleResolvedAction, actor: BattleActor) -> BattleResolvedAction {
+        guard result.action == .skill else { return result }
+
+        let cooldownRemaining = actor == .player ? playerSkillCooldownRemaining : opponentSkillCooldownRemaining
+        guard cooldownRemaining > 0 else { return result }
+
+        return BattleResolvedAction(
+            actor: result.actor,
+            action: result.action,
+            target: result.target,
+            damage: result.damage,
+            message: "\(result.message) 技能將冷卻 \(cooldownRemaining) 回合。"
+        )
+    }
+}
+
+private extension Element {
+    func hasBattleAdvantage(against defender: Element) -> Bool {
+        battleMultiplier(against: defender) > 1.0
     }
 }
