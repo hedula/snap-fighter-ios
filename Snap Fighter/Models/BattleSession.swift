@@ -55,6 +55,31 @@ struct BattleResolvedAction: Equatable {
     let target: BattleActor?
     let damage: Int
     let message: String
+    let skillEffect: BattleSkillEffect?
+
+    init(
+        actor: BattleActor,
+        action: BattleAction,
+        target: BattleActor?,
+        damage: Int,
+        message: String,
+        skillEffect: BattleSkillEffect? = nil
+    ) {
+        self.actor = actor
+        self.action = action
+        self.target = target
+        self.damage = damage
+        self.message = message
+        self.skillEffect = skillEffect
+    }
+}
+
+struct BattleSkillEffect: Equatable {
+    let actor: BattleActor
+    let element: Element
+    let tier: ElementalSkillTier
+    let skillName: String
+    let useCountAfterActivation: Int
 }
 
 struct BattleEventPresentation: Equatable {
@@ -219,7 +244,7 @@ struct BattleSession {
 
     var reservePlayerStatusHint: String? {
         guard let reservePlayer else { return nil }
-        return reservePlayer.skillType.reserveEntryHint
+        return "\(reservePlayer.skillType.reserveEntryHint) · \(reservePlayer.elementalSkillDisplayText)"
     }
 
     var actionPanelHint: String {
@@ -426,8 +451,16 @@ struct BattleSession {
     }
 
     private mutating func performSkill(from actor: BattleActor, damageRoll: Double) -> BattleResolvedAction {
+        recordSkillUse(for: actor)
         let attacker = actor == .player ? player : opponent
         let template = attacker.skillType
+        let skillEffect = BattleSkillEffect(
+            actor: actor,
+            element: attacker.element,
+            tier: attacker.elementalSkillTier,
+            skillName: attacker.skill,
+            useCountAfterActivation: attacker.skillUsageCount
+        )
 
         switch template {
         case .powerStrike:
@@ -436,19 +469,22 @@ struct BattleSession {
                 action: .skill,
                 actionDisplayName: attacker.skill,
                 profile: .skill,
-                multiplier: 1.3,
+                multiplier: 1.3 * attacker.elementalSkillTier.intensityMultiplier,
                 flatBonus: 8,
                 damageRoll: damageRoll
             )
+            result = addingSkillEffect(skillEffect, to: result)
             startSkillCooldown(for: actor)
             result = refreshedEventResult(from: result, actor: actor)
             return result
         case .fortify:
-            let result = fortify(from: actor)
+            var result = fortify(from: actor)
+            result = addingSkillEffect(skillEffect, to: result)
             startSkillCooldown(for: actor)
             return refreshedEventResult(from: result, actor: actor)
         case .siphonStrike:
             var result = siphonStrike(from: actor, damageRoll: damageRoll)
+            result = addingSkillEffect(skillEffect, to: result)
             startSkillCooldown(for: actor)
             result = refreshedEventResult(from: result, actor: actor)
             return result
@@ -610,6 +646,26 @@ struct BattleSession {
         }
     }
 
+    private mutating func recordSkillUse(for actor: BattleActor) {
+        switch actor {
+        case .player:
+            player = player.recordingSkillUse()
+        case .opponent:
+            opponent = opponent.recordingSkillUse()
+        }
+    }
+
+    private func addingSkillEffect(_ skillEffect: BattleSkillEffect, to result: BattleResolvedAction) -> BattleResolvedAction {
+        BattleResolvedAction(
+            actor: result.actor,
+            action: result.action,
+            target: result.target,
+            damage: result.damage,
+            message: result.message,
+            skillEffect: skillEffect
+        )
+    }
+
     private func eventPresentation(for result: BattleResolvedAction) -> BattleEventPresentation {
         BattleEventPresentation(
             title: result.message,
@@ -652,7 +708,8 @@ struct BattleSession {
             action: result.action,
             target: result.target,
             damage: result.damage,
-            message: "\(result.message) 技能將冷卻 \(cooldownRemaining) 回合。"
+            message: "\(result.message) 技能將冷卻 \(cooldownRemaining) 回合。",
+            skillEffect: result.skillEffect
         )
     }
 }

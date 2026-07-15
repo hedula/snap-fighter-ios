@@ -13,6 +13,7 @@ struct BattleView: View {
     @State private var m2DamageText: String?
     @State private var m1DamageOpacity: Double = 0
     @State private var m2DamageOpacity: Double = 0
+    @State private var activeSkillEffect: ActiveSkillEffect?
 
     init(player1: Monster, player2: Monster, reservePlayer: Monster? = nil, onBattleEnd: @escaping (Monster) -> Void) {
         _battle = State(initialValue: BattleSession(player: player1, opponent: player2, reservePlayer: reservePlayer))
@@ -152,6 +153,17 @@ struct BattleView: View {
                 reserveBookmark
                     .frame(width: 76, height: 112)
                     .position(x: proxy.size.width - 48, y: proxy.size.height * 0.72)
+
+                if let activeSkillEffect {
+                    elementalSkillEffect(activeSkillEffect)
+                        .frame(width: min(250, proxy.size.width * 0.68), height: min(210, proxy.size.height * 0.44))
+                        .position(
+                            x: activeSkillEffect.effect.actor == .player ? proxy.size.width * 0.36 : proxy.size.width * 0.66,
+                            y: activeSkillEffect.effect.actor == .player ? proxy.size.height * 0.62 : proxy.size.height * 0.34
+                        )
+                        .transition(.scale(scale: 0.72).combined(with: .opacity))
+                        .zIndex(5)
+                }
             }
         }
     }
@@ -390,6 +402,53 @@ struct BattleView: View {
         .accessibilityLabel(eventCopy)
     }
 
+    private func elementalSkillEffect(_ active: ActiveSkillEffect) -> some View {
+        let effect = active.effect
+        let particles = particleOffsets(for: effect.tier)
+        let color = effectColor(for: effect.element)
+
+        return ZStack {
+            ForEach(Array(particles.enumerated()), id: \.offset) { index, offset in
+                ElementalSkillParticle(
+                    symbolName: effectSymbol(for: effect.element, index: index),
+                    color: color,
+                    size: particleSize(for: effect.tier, index: index),
+                    glowRadius: effect.tier == .high ? 14 : 8,
+                    expandedScale: 1.0 + CGFloat(index % 3) * 0.08,
+                    offset: offset,
+                    isExpanded: active.isExpanded
+                )
+            }
+
+            Circle()
+                .stroke(effectGradient(for: effect.element), lineWidth: ringWidth(for: effect.tier))
+                .frame(width: ringSize(for: effect.tier), height: ringSize(for: effect.tier))
+                .scaleEffect(active.isExpanded ? 1.25 : 0.45)
+                .opacity(active.isExpanded ? 0.04 : 0.88)
+                .shadow(color: color.opacity(0.8), radius: 16)
+
+            VStack(spacing: 4) {
+                Image(systemName: effectSymbol(for: effect.element, index: 0))
+                    .font(.system(size: 28, weight: .black))
+                Text(effect.tier.rawValue)
+                    .font(.system(size: 12, weight: .black, design: .serif))
+                Text(effect.skillName)
+                    .font(.system(size: 13, weight: .bold, design: .serif))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+            }
+            .foregroundStyle(Color.parchment)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(Color.black.opacity(0.54), in: Capsule())
+            .overlay(Capsule().stroke(effectGradient(for: effect.element), lineWidth: 1))
+            .scaleEffect(active.isExpanded ? 0.94 : 1.08)
+            .opacity(active.isExpanded ? 0.0 : 1.0)
+        }
+        .allowsHitTesting(false)
+        .accessibilityLabel("\(effect.element.rawValue)屬性\(effect.tier.rawValue)技能特效，\(effect.skillName)")
+    }
+
     private func commandHand(availableWidth: CGFloat) -> some View {
         let cardWidth = min(98, (availableWidth + 4) / 4)
 
@@ -490,8 +549,23 @@ struct BattleView: View {
     private enum Target { case m1, m2 }
 
     private func present(_ result: BattleResolvedAction) async {
+        if let skillEffect = result.skillEffect {
+            await showSkillEffect(skillEffect)
+        }
+
         guard result.damage > 0, let target = result.target else { return }
         await showDamage(amount: result.damage, target: target == .player ? .m1 : .m2)
+    }
+
+    private func showSkillEffect(_ effect: BattleSkillEffect) async {
+        let active = ActiveSkillEffect(effect: effect)
+        activeSkillEffect = active
+        try? await Task.sleep(nanoseconds: 40_000_000)
+        withAnimation(.easeOut(duration: effectDuration(for: effect.tier))) {
+            activeSkillEffect = active.expanded()
+        }
+        try? await Task.sleep(nanoseconds: UInt64(effectDuration(for: effect.tier) * 1_000_000_000))
+        activeSkillEffect = nil
     }
 
     private func finishBattleIfNeeded() async -> Bool {
@@ -548,7 +622,7 @@ struct BattleView: View {
     private func shortSubtitle(for action: BattleAction) -> String {
         switch action {
         case .attack: return "穩定輸出"
-        case .skill: return battle.playerSkillCooldownRemaining > 0 ? "冷卻 \(battle.playerSkillCooldownRemaining)" : "爆發效果"
+        case .skill: return battle.playerSkillCooldownRemaining > 0 ? "冷卻 \(battle.playerSkillCooldownRemaining)" : battle.player.elementalSkillDisplayText
         case .defend: return "下次減傷"
         case .swap: return "消耗回合"
         }
@@ -585,6 +659,128 @@ struct BattleView: View {
 
     private func elementColor(for element: Element) -> Color {
         Color(hex: element.gradientColors[0])
+    }
+
+    private func effectColor(for element: Element) -> Color {
+        switch element {
+        case .fire: return Color(red: 1.0, green: 0.28, blue: 0.08)
+        case .water: return Color(red: 0.12, green: 0.72, blue: 1.0)
+        case .grass: return Color(red: 0.26, green: 0.9, blue: 0.32)
+        case .electric: return Color(red: 1.0, green: 0.86, blue: 0.1)
+        case .dark: return Color(red: 0.58, green: 0.22, blue: 0.95)
+        case .normal: return Color(red: 0.82, green: 0.86, blue: 0.9)
+        }
+    }
+
+    private func effectGradient(for element: Element) -> LinearGradient {
+        let colors = element.gradientColors.map(Color.init(hex:))
+        return LinearGradient(colors: colors + [.white.opacity(0.86)], startPoint: .topLeading, endPoint: .bottomTrailing)
+    }
+
+    private func effectSymbol(for element: Element, index: Int) -> String {
+        switch element {
+        case .fire: return index.isMultiple(of: 3) ? "flame.fill" : "sparkle"
+        case .water: return index.isMultiple(of: 2) ? "drop.fill" : "water.waves"
+        case .grass: return index.isMultiple(of: 2) ? "leaf.fill" : "wind"
+        case .electric: return index.isMultiple(of: 2) ? "bolt.fill" : "sparkles"
+        case .dark: return index.isMultiple(of: 2) ? "moon.stars.fill" : "circle.hexagongrid.fill"
+        case .normal: return index.isMultiple(of: 2) ? "sparkles" : "circle.hexagongrid.fill"
+        }
+    }
+
+    private func particleOffsets(for tier: ElementalSkillTier) -> [CGSize] {
+        let base = [
+            CGSize(width: -76, height: -34),
+            CGSize(width: 68, height: -42),
+            CGSize(width: -54, height: 42),
+            CGSize(width: 86, height: 34),
+            CGSize(width: -14, height: -82),
+            CGSize(width: 18, height: 82)
+        ]
+
+        switch tier {
+        case .low:
+            return Array(base.prefix(4))
+        case .medium:
+            return base
+        case .high:
+            return base + [
+                CGSize(width: -112, height: 6),
+                CGSize(width: 116, height: -2),
+                CGSize(width: -38, height: -116),
+                CGSize(width: 44, height: 112)
+            ]
+        }
+    }
+
+    private func particleSize(for tier: ElementalSkillTier, index: Int) -> CGFloat {
+        let base: CGFloat
+        switch tier {
+        case .low: base = 22
+        case .medium: base = 27
+        case .high: base = 33
+        }
+        return base + CGFloat(index % 3) * 3
+    }
+
+    private func ringSize(for tier: ElementalSkillTier) -> CGFloat {
+        switch tier {
+        case .low: return 92
+        case .medium: return 124
+        case .high: return 158
+        }
+    }
+
+    private func ringWidth(for tier: ElementalSkillTier) -> CGFloat {
+        switch tier {
+        case .low: return 3
+        case .medium: return 5
+        case .high: return 7
+        }
+    }
+
+    private func effectDuration(for tier: ElementalSkillTier) -> Double {
+        switch tier {
+        case .low: return 0.42
+        case .medium: return 0.52
+        case .high: return 0.66
+        }
+    }
+}
+
+private struct ActiveSkillEffect: Identifiable, Equatable {
+    let id: UUID
+    let effect: BattleSkillEffect
+    let isExpanded: Bool
+
+    init(id: UUID = UUID(), effect: BattleSkillEffect, isExpanded: Bool = false) {
+        self.id = id
+        self.effect = effect
+        self.isExpanded = isExpanded
+    }
+
+    func expanded() -> ActiveSkillEffect {
+        ActiveSkillEffect(id: id, effect: effect, isExpanded: true)
+    }
+}
+
+private struct ElementalSkillParticle: View {
+    let symbolName: String
+    let color: Color
+    let size: CGFloat
+    let glowRadius: CGFloat
+    let expandedScale: CGFloat
+    let offset: CGSize
+    let isExpanded: Bool
+
+    var body: some View {
+        Image(systemName: symbolName)
+            .font(.system(size: size, weight: .black))
+            .foregroundStyle(color)
+            .shadow(color: color.opacity(0.95), radius: glowRadius)
+            .scaleEffect(isExpanded ? expandedScale : 0.35)
+            .opacity(isExpanded ? 0.08 : 0.95)
+            .offset(x: isExpanded ? offset.width : 0, y: isExpanded ? offset.height : 0)
     }
 }
 

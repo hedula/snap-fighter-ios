@@ -42,7 +42,7 @@ final class Snap_FighterUITests: XCTestCase {
         XCTAssertTrue(quickBattle.waitForExistence(timeout: 3))
         quickBattle.tap()
 
-        XCTAssertTrue(app.staticTexts["準備對戰！"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.staticTexts["決鬥編成"].waitForExistence(timeout: 3))
 
         app.terminate()
         app.launch()

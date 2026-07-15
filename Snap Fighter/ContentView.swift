@@ -555,8 +555,9 @@ struct ContentView: View {
             }
             .padding(.horizontal, 16)
             .padding(.top, 10)
-            .padding(.bottom, 8)
-            .background(RPGTheme.midnight.opacity(0.96))
+            .padding(.bottom, 34)
+            .frame(maxWidth: .infinity)
+            .background(RPGTheme.midnight.opacity(0.96).ignoresSafeArea(edges: .bottom))
         }
         .preferredColorScheme(.dark)
     }
@@ -731,6 +732,7 @@ struct ContentView: View {
                 .ignoresSafeArea()
             content()
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private func ritualHeader(eyebrow: String, title: String, subtitle: String) -> some View {
@@ -1024,110 +1026,113 @@ private struct KeyOutProcessView: View {
     }
 
     var body: some View {
-        ScrollView(showsIndicators: false) {
-            VStack(spacing: 18) {
-                VStack(spacing: 7) {
-                    Text("KEY-OUT RITUAL")
-                        .font(.caption.weight(.black))
-                        .tracking(2.1)
-                        .foregroundStyle(RPGTheme.gold)
-                    Text("正在召喚怪物")
-                        .font(.system(size: 30, weight: .black, design: .rounded))
-                        .foregroundStyle(.white)
-                    Text("保留物件輪廓，將現實影像轉化為透明卡面")
-                        .font(.caption.weight(.medium))
-                        .foregroundStyle(RPGTheme.mist)
-                        .multilineTextAlignment(.center)
-                }
-
-                imageStage
-
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack(alignment: .firstTextBaseline) {
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text(phase.title)
-                                .font(.headline.weight(.black))
-                                .foregroundStyle(.white)
-                            Text(phase.detail)
-                                .font(.caption)
-                                .foregroundStyle(RPGTheme.mist)
-                        }
-                        Spacer()
-                        Text("\(Int(phase.progress * 100))%")
-                            .font(.headline.monospacedDigit().weight(.black))
+        GeometryReader { proxy in
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 18) {
+                    VStack(spacing: 7) {
+                        Text("KEY-OUT RITUAL")
+                            .font(.caption.weight(.black))
+                            .tracking(2.1)
                             .foregroundStyle(RPGTheme.gold)
+                        Text("正在召喚怪物")
+                            .font(.system(size: 30, weight: .black, design: .rounded))
+                            .foregroundStyle(.white)
+                        Text("保留物件輪廓，將現實影像轉化為透明卡面")
+                            .font(.caption.weight(.medium))
+                            .foregroundStyle(RPGTheme.mist)
+                            .multilineTextAlignment(.center)
                     }
 
-                    GeometryReader { proxy in
-                        ZStack(alignment: .leading) {
-                            Capsule().fill(RPGTheme.panelRaised)
-                            Capsule()
-                                .fill(RPGTheme.gold)
-                                .frame(width: proxy.size.width * phase.progress)
-                        }
-                    }
-                    .frame(height: 7)
-                    .animation(.easeInOut(duration: 0.4), value: phase.progress)
-                }
-                .padding(15)
-                .background(RPGTheme.panel.opacity(0.96))
-                .clipShape(RoundedRectangle(cornerRadius: 17, style: .continuous))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 17, style: .continuous)
-                        .stroke(RPGTheme.goldDark, lineWidth: 1)
-                }
+                    imageStage
 
-                if phase == .generatingCard, progress?.cutoutImage == nil {
-                    Button(action: onManualCutout) {
-                        HStack(spacing: 10) {
-                            Image(systemName: "hand.tap.fill")
-                                .font(.headline.weight(.black))
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("手動去背")
-                                    .font(.subheadline.weight(.black))
-                                Text("點一下照片中的主體")
-                                    .font(.caption2.weight(.medium))
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack(alignment: .firstTextBaseline) {
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(phase.title)
+                                    .font(.headline.weight(.black))
+                                    .foregroundStyle(.white)
+                                Text(phase.detail)
+                                    .font(.caption)
                                     .foregroundStyle(RPGTheme.mist)
                             }
                             Spacer()
-                            Image(systemName: "chevron.right")
+                            Text("\(Int(phase.progress * 100))%")
+                                .font(.headline.monospacedDigit().weight(.black))
+                                .foregroundStyle(RPGTheme.gold)
                         }
-                        .foregroundStyle(RPGTheme.parchment)
-                        .padding(.horizontal, 14)
-                        .frame(height: 52)
-                        .background(RPGTheme.panelRaised)
-                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                        .overlay {
-                            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                .stroke(RPGTheme.gold, lineWidth: 1)
+
+                        GeometryReader { proxy in
+                            ZStack(alignment: .leading) {
+                                Capsule().fill(RPGTheme.panelRaised)
+                                Capsule()
+                                    .fill(RPGTheme.gold)
+                                    .frame(width: proxy.size.width * phase.progress)
+                            }
+                        }
+                        .frame(height: 7)
+                        .animation(.easeInOut(duration: 0.4), value: phase.progress)
+                    }
+                    .padding(15)
+                    .background(RPGTheme.panel.opacity(0.96))
+                    .clipShape(RoundedRectangle(cornerRadius: 17, style: .continuous))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 17, style: .continuous)
+                            .stroke(RPGTheme.goldDark, lineWidth: 1)
+                    }
+
+                    if phase == .generatingCard, progress?.cutoutImage == nil {
+                        Button(action: onManualCutout) {
+                            HStack(spacing: 10) {
+                                Image(systemName: "hand.tap.fill")
+                                    .font(.headline.weight(.black))
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("手動去背")
+                                        .font(.subheadline.weight(.black))
+                                    Text("點一下照片中的主體")
+                                        .font(.caption2.weight(.medium))
+                                        .foregroundStyle(RPGTheme.mist)
+                                }
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                            }
+                            .foregroundStyle(RPGTheme.parchment)
+                            .padding(.horizontal, 14)
+                            .frame(height: 52)
+                            .background(RPGTheme.panelRaised)
+                            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            .overlay {
+                                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                    .stroke(RPGTheme.gold, lineWidth: 1)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityIdentifier("manual-cutout-button")
+                        .accessibilityLabel("手動去背")
+                        .accessibilityHint("開啟 Apple VisionKit 主體選取工具")
+                    }
+
+                    HStack(spacing: 0) {
+                        ForEach(MonsterAnalysisPhase.allCases, id: \.rawValue) { item in
+                            phaseMarker(item)
+                            if item != MonsterAnalysisPhase.allCases.last {
+                                Rectangle()
+                                    .fill(item.rawValue < phase.rawValue ? RPGTheme.gold : RPGTheme.panelRaised)
+                                    .frame(height: 1)
+                            }
                         }
                     }
-                    .buttonStyle(.plain)
-                    .accessibilityIdentifier("manual-cutout-button")
-                    .accessibilityLabel("手動去背")
-                    .accessibilityHint("開啟 Apple VisionKit 主體選取工具")
-                }
+                    .accessibilityElement(children: .contain)
 
-                HStack(spacing: 0) {
-                    ForEach(MonsterAnalysisPhase.allCases, id: \.rawValue) { item in
-                        phaseMarker(item)
-                        if item != MonsterAnalysisPhase.allCases.last {
-                            Rectangle()
-                                .fill(item.rawValue < phase.rawValue ? RPGTheme.gold : RPGTheme.panelRaised)
-                                .frame(height: 1)
-                        }
+                    if showRecoveryActions {
+                        recoveryPanel
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
                     }
                 }
-                .accessibilityElement(children: .contain)
-
-                if showRecoveryActions {
-                    recoveryPanel
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
-                }
+                .padding(.horizontal, 20)
+                .padding(.top, 42)
+                .padding(.bottom, 24)
+                .frame(width: proxy.size.width)
             }
-            .padding(.horizontal, 20)
-            .padding(.top, 42)
-            .padding(.bottom, 24)
         }
         .onAppear {
             guard !reduceMotion else { return }

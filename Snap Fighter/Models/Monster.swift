@@ -45,6 +45,20 @@ enum BattleSkillType: String, Codable, CaseIterable {
     }
 }
 
+enum ElementalSkillTier: String, Codable, Equatable {
+    case low = "低階"
+    case medium = "中階"
+    case high = "高階"
+
+    var intensityMultiplier: Double {
+        switch self {
+        case .low: return 1.0
+        case .medium: return 1.12
+        case .high: return 1.25
+        }
+    }
+}
+
 struct Monster: Identifiable {
     let id: UUID
     let name: String
@@ -59,6 +73,7 @@ struct Monster: Identifiable {
     let preferredArtwork: ArtworkPreference
     let level: Int
     let experience: Int
+    let skillUsageCount: Int
     var currentHp: Int
 
     init(
@@ -75,6 +90,7 @@ struct Monster: Identifiable {
         preferredArtwork: ArtworkPreference? = nil,
         level: Int = 1,
         experience: Int = 0,
+        skillUsageCount: Int = 0,
         currentHp: Int? = nil
     ) {
         self.id = id
@@ -90,6 +106,7 @@ struct Monster: Identifiable {
         self.preferredArtwork = preferredArtwork ?? (cardImage != nil ? .cutout : .original)
         self.level = max(1, level)
         self.experience = max(0, experience)
+        self.skillUsageCount = max(0, skillUsageCount)
         self.currentHp = currentHp ?? hp
     }
 
@@ -118,6 +135,22 @@ struct Monster: Identifiable {
 
     var experienceProgressText: String {
         "\(experience)/\(experienceNeededForNextLevel)"
+    }
+
+    var elementalSkillTier: ElementalSkillTier {
+        if level >= 5 || skillUsageCount >= 12 {
+            return .high
+        }
+
+        if level >= 3 || skillUsageCount >= 5 {
+            return .medium
+        }
+
+        return .low
+    }
+
+    var elementalSkillDisplayText: String {
+        "\(element.rawValue) \(elementalSkillTier.rawValue)"
     }
 
     var displayArtwork: UIImage? {
@@ -161,6 +194,27 @@ struct Monster: Identifiable {
             preferredArtwork: preferredArtwork,
             level: nextLevel,
             experience: nextExperience,
+            skillUsageCount: skillUsageCount,
+            currentHp: currentHp
+        )
+    }
+
+    func recordingSkillUse() -> Monster {
+        Monster(
+            id: id,
+            name: name,
+            element: element,
+            hp: hp,
+            atk: atk,
+            def: def,
+            skill: skill,
+            skillType: skillType,
+            capturedImage: capturedImage,
+            cardImage: cardImage,
+            preferredArtwork: preferredArtwork,
+            level: level,
+            experience: experience,
+            skillUsageCount: skillUsageCount + 1,
             currentHp: currentHp
         )
     }
@@ -180,6 +234,7 @@ struct Monster: Identifiable {
             preferredArtwork: preference,
             level: level,
             experience: experience,
+            skillUsageCount: skillUsageCount,
             currentHp: currentHp
         )
     }
@@ -199,6 +254,7 @@ struct Monster: Identifiable {
             preferredArtwork: .cutout,
             level: level,
             experience: experience,
+            skillUsageCount: skillUsageCount,
             currentHp: currentHp
         )
     }
@@ -353,6 +409,7 @@ struct StoredMonster: Codable {
     let preferredArtwork: String
     let level: Int
     let experience: Int
+    let skillUsageCount: Int
 
     private enum CodingKeys: String, CodingKey {
         case id
@@ -368,6 +425,7 @@ struct StoredMonster: Codable {
         case preferredArtwork
         case level
         case experience
+        case skillUsageCount
     }
 
     init(
@@ -383,7 +441,8 @@ struct StoredMonster: Codable {
         cardImageJPEGData: Data?,
         preferredArtwork: String,
         level: Int,
-        experience: Int
+        experience: Int,
+        skillUsageCount: Int
     ) {
         self.id = id
         self.name = name
@@ -398,6 +457,7 @@ struct StoredMonster: Codable {
         self.preferredArtwork = preferredArtwork
         self.level = level
         self.experience = experience
+        self.skillUsageCount = skillUsageCount
     }
 
     init(from decoder: Decoder) throws {
@@ -417,6 +477,7 @@ struct StoredMonster: Codable {
             ?? (cardImageJPEGData != nil ? ArtworkPreference.cutout.rawValue : ArtworkPreference.original.rawValue)
         level = try container.decodeIfPresent(Int.self, forKey: .level) ?? 1
         experience = try container.decodeIfPresent(Int.self, forKey: .experience) ?? 0
+        skillUsageCount = try container.decodeIfPresent(Int.self, forKey: .skillUsageCount) ?? 0
     }
 }
 
@@ -436,6 +497,7 @@ extension Monster {
             preferredArtwork: preferredArtwork,
             level: level,
             experience: experience,
+            skillUsageCount: skillUsageCount,
             currentHp: hp
         )
     }
@@ -455,6 +517,7 @@ extension Monster {
             preferredArtwork: ArtworkPreference(rawValue: stored.preferredArtwork),
             level: stored.level,
             experience: stored.experience,
+            skillUsageCount: stored.skillUsageCount,
             currentHp: stored.hp
         )
     }
@@ -473,7 +536,8 @@ extension Monster {
             cardImageJPEGData: cardImage?.jpegData(compressionQuality: 0.9),
             preferredArtwork: preferredArtwork.rawValue,
             level: level,
-            experience: experience
+            experience: experience,
+            skillUsageCount: skillUsageCount
         )
     }
 }

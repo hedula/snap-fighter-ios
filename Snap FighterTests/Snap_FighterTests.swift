@@ -206,6 +206,7 @@ struct Snap_FighterTests {
         #expect(reloadedStore.deck.first?.preferredArtwork == .original)
         #expect(reloadedStore.deck.first?.level == 3)
         #expect(reloadedStore.deck.first?.experience == 45)
+        #expect(reloadedStore.deck.first?.skillUsageCount == 0)
     }
 
     @Test func deckStoreRejectsDuplicateWinner() {
@@ -846,6 +847,33 @@ struct Snap_FighterTests {
         #expect(session.actionPresentation(for: .skill).isEnabled)
     }
 
+    @Test func elementalSkillTierPromotesByLevelOrUseCount() {
+        let starter = Monster(name: "火苗", element: .fire, hp: 60, atk: 44, def: 20, skill: "小火花")
+        let practiced = Monster(name: "潮術士", element: .water, hp: 70, atk: 42, def: 30, skill: "水流術", skillUsageCount: 5)
+        let veteran = Monster(name: "影術士", element: .dark, hp: 82, atk: 58, def: 34, skill: "暗影爆裂", level: 5)
+        let mastered = Monster(name: "雷術士", element: .electric, hp: 76, atk: 62, def: 28, skill: "雷鳴術", skillUsageCount: 12)
+
+        #expect(starter.elementalSkillTier == .low)
+        #expect(practiced.elementalSkillTier == .medium)
+        #expect(veteran.elementalSkillTier == .high)
+        #expect(mastered.elementalSkillTier == .high)
+    }
+
+    @Test func battleSessionSkillUseRecordsMasteryAndEffect() {
+        var session = BattleSession(
+            player: Monster(name: "烈焰術士", element: .fire, hp: 78, atk: 52, def: 20, skill: "烈焰突進", skillUsageCount: 4),
+            opponent: Monster(name: "藤甲守衛", element: .grass, hp: 100, atk: 40, def: 28, skill: "藤牆護盾")
+        )
+
+        let result = session.performPlayerAction(.skill, damageRoll: 1.0)
+
+        #expect(session.player.skillUsageCount == 5)
+        #expect(session.player.elementalSkillTier == .medium)
+        #expect(result?.skillEffect?.element == .fire)
+        #expect(result?.skillEffect?.tier == .medium)
+        #expect(result?.skillEffect?.useCountAfterActivation == 5)
+    }
+
     @Test func monsterStoredDataPreservesExplicitSkillTypeAndFallsBackForLegacyData() throws {
         let explicit = Monster(
             name: "護城龜",
@@ -854,7 +882,8 @@ struct Snap_FighterTests {
             atk: 38,
             def: 30,
             skill: "碧潮障壁",
-            skillType: .fortify
+            skillType: .fortify,
+            skillUsageCount: 6
         )
 
         let encoded = try JSONEncoder().encode(explicit.stored)
@@ -862,6 +891,8 @@ struct Snap_FighterTests {
         let decodedMonster = Monster(stored: decodedStored)
 
         #expect(decodedMonster.skillType == .fortify)
+        #expect(decodedMonster.skillUsageCount == 6)
+        #expect(decodedMonster.elementalSkillTier == .medium)
 
         let legacyJSON = """
         {
@@ -882,6 +913,7 @@ struct Snap_FighterTests {
         let legacyMonster = Monster(stored: legacyStored)
 
         #expect(legacyMonster.skillType == .fortify)
+        #expect(legacyMonster.skillUsageCount == 0)
     }
 
     @Test func battleSessionExposesHudLabelsAndTags() {
@@ -897,7 +929,7 @@ struct Snap_FighterTests {
         #expect(session.headerTags.contains("副將待命"))
         #expect(session.playerStatusTags.contains("剋制敵方"))
         #expect(session.opponentStatusTags.contains("被我方剋制"))
-        #expect(session.reservePlayerStatusHint == "進場防禦")
+        #expect(session.reservePlayerStatusHint == "進場防禦 · 水 低階")
 
         _ = session.performPlayerAction(.swap)
 
@@ -912,7 +944,7 @@ struct Snap_FighterTests {
             reservePlayer: Monster(name: "閃焰突擊手", element: .electric, hp: 76, atk: 58, def: 18, skill: "雷火突進")
         )
 
-        #expect(session.reservePlayerStatusHint == "進場增傷")
+        #expect(session.reservePlayerStatusHint == "進場增傷 · 電 低階")
 
         _ = session.performPlayerAction(.swap)
 
