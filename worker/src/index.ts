@@ -20,6 +20,21 @@ type WorkersAiResponse = {
 const DEFAULT_VISION_MODEL = "@cf/meta/llama-3.2-11b-vision-instruct";
 const MAX_ANALYZE_ATTEMPTS = 2;
 const DEFAULT_RATE_LIMIT_PER_MINUTE = 20;
+const fantasyNamePrefixes: Record<MonsterResponse["element"], string[]> = {
+  "火": ["焰冠", "熔核", "赤燼"],
+  "水": ["潮冕", "霜潮", "深淵"],
+  "草": ["藤冠", "森咒", "翠牙"],
+  "電": ["雷核", "閃煌", "天鳴"],
+  "暗": ["冥影", "夜咒", "黑曜"],
+  "一般": ["星鐵", "幻界", "秘銀"]
+};
+const fantasyNameSuffixes = ["獸", "王", "騎士", "守衛", "獵手", "魔將", "使", "機兵"];
+const fantasyNameMarkers = [
+  "焰", "炎", "熔", "燼", "潮", "霜", "淵", "藤", "森", "翠",
+  "雷", "閃", "鳴", "冥", "影", "夜", "咒", "曜", "星", "幻",
+  "秘", "龍", "魔", "王", "皇", "騎士", "守衛", "獵手", "魔將",
+  "使", "獸", "機兵"
+];
 const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
 
 export default {
@@ -133,13 +148,16 @@ async function runWorkersAiVisionModel(env: Env, image: string, attempt: number)
 
 function buildSystemPrompt(attempt: number): string {
   const prompt = [
-    "你是一個奇幻角色生成器。",
-    "分析圖片中最明顯的物體，將它擬人化為一個戰鬥角色。",
+    "你是一個中二奇幻怪物卡牌命名師。",
+    "先辨識圖片中最明顯的主物件，再將它擬人化為戰鬥角色。",
+    "name 必須保留主物件線索，例如杯、貓、燈、瓶、鞋、鍵盤、背包、椅等，不能只寫神秘生物或未知物體。",
+    "name 風格要像 JRPG 怪物或少年漫畫稱號：中二、遊戲化、有戰鬥感，但不要使用真實品牌、人名、英文、數字或標點。",
+    "name 建議格式：屬性/氣質稱號 + 物件線索 + 身分尾綴。例：冥焰杯王、雷核鍵盤使、潮瓶守衛、影牙背包獸、星鐵滑鼠皇。",
     "你必須只輸出 JSON，且不得輸出 markdown。",
     "不得輸出額外說明、前言、註解。",
     "JSON schema:",
-    '{"name":"2~6字中文","element":"火|水|草|電|暗|一般","hp":50~100,"atk":30~80,"def":20~60,"skill":"10~20字中文"}',
-    "skill 請保持精簡，避免超過 16 個中文字。"
+    '{"name":"4~8字中文中二怪物名","element":"火|水|草|電|暗|一般","hp":50~100,"atk":30~80,"def":20~60,"skill":"8~16字中文招式名"}',
+    "skill 請對應主物件與屬性，例如杯可用沸騰、鍵盤可用連打、鞋可用疾走。"
   ];
 
   if (attempt > 1) {
@@ -205,13 +223,64 @@ function normalizeMonster(raw: unknown): MonsterResponse {
     : "一般";
 
   return {
-    name: clampString(r.name, "神秘生物", 2, 8),
+    name: gamifyMonsterName(r.name, element),
     element,
     hp: clampNumber(r.hp, 50, 100, 70),
     atk: clampNumber(r.atk, 30, 80, 50),
     def: clampNumber(r.def, 20, 60, 35),
     skill: clampString(r.skill, "普通一擊：穩定輸出", 6, 40)
   };
+}
+
+function gamifyMonsterName(value: unknown, element: MonsterResponse["element"]): string {
+  const normalized = normalizeNameToken(value);
+  if (normalized && isFantasyMonsterName(normalized)) {
+    return normalized.slice(0, 8);
+  }
+
+  const objectClue = extractObjectClue(normalized);
+  const source = objectClue || "召喚";
+  const prefix = pickByHash(fantasyNamePrefixes[element], `${element}:${source}`);
+  const suffix = chooseSuffix(prefix, source, `${source}:${element}`);
+  const maxObjectLength = Math.max(2, 8 - prefix.length - suffix.length);
+  const compactObject = source.slice(0, maxObjectLength);
+
+  return `${prefix}${compactObject}${suffix}`.slice(0, 8);
+}
+
+function normalizeNameToken(value: unknown): string {
+  if (typeof value !== "string") return "";
+  return value
+    .trim()
+    .replace(/[A-Za-z0-9\s"'`.,，。:：;；!?！？()[\]{}<>《》「」『』【】／/\\|_-]/g, "")
+    .slice(0, 12);
+}
+
+function isFantasyMonsterName(name: string): boolean {
+  if (name.length < 4) return false;
+  if (/(神秘|未知|普通|一般|物體|東西|生物)/.test(name)) return false;
+  return fantasyNameMarkers.some((marker) => name.includes(marker));
+}
+
+function extractObjectClue(name: string): string {
+  return name
+    .replace(/^(神秘|未知|普通|一般|可愛|小小|這個|一隻|一個)+/, "")
+    .replace(/(怪物|怪獸|生物|物體|東西|角色)+$/g, "")
+    .slice(0, 6);
+}
+
+function chooseSuffix(prefix: string, objectClue: string, seed: string): string {
+  const availableLength = 8 - prefix.length - objectClue.length;
+  const candidates = fantasyNameSuffixes.filter((suffix) => suffix.length <= availableLength);
+  return pickByHash(candidates.length > 0 ? candidates : ["獸"], seed);
+}
+
+function pickByHash<T>(values: T[], seed: string): T {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i += 1) {
+    hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
+  }
+  return values[hash % values.length];
 }
 
 function clampNumber(value: unknown, min: number, max: number, fallback: number): number {

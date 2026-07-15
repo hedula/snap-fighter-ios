@@ -164,12 +164,12 @@ final class AIService {
     func analyzeMock(image: UIImage) async -> AnalysisResult {
         try? await Task.sleep(nanoseconds: 1_500_000_000)
         let response = MonsterResponse(
-            name: "神秘馬克杯",
+            name: "熔核馬克杯魔將",
             element: "火",
             hp: 75,
             atk: 60,
             def: 35,
-            skill: "沸騰之力：發動時使對方陷入灼燒狀態",
+            skill: "沸騰杯焰衝擊",
             skillType: BattleSkillType.powerStrike.rawValue
         )
         let cardImage = await isolateForeground(image)

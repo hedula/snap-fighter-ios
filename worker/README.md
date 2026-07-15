@@ -12,14 +12,16 @@ Request body:
 Response body (MonsterResponse):
 ```json
 {
-  "name": "葉尖火精",
+  "name": "焰冠葉燈騎士",
   "element": "火",
   "hp": 70,
   "atk": 55,
   "def": 35,
-  "skill": "火葉旋風：用旋轉的葉片釋放火焰攻擊敵人"
+  "skill": "燈焰旋風斬"
 }
 ```
+
+`name` keeps a clue from the recognized subject while wrapping it in a JRPG-style title, such as `雷核鍵盤使`, `潮瓶守衛`, or `影牙背包獸`. Generic names like `神秘生物` are normalized into a more game-like fallback before being returned.
 
 ## Runtime Config
 - Cloudflare Workers AI binding `AI` (required): configured in `wrangler.toml`.
