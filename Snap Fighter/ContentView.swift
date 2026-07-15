@@ -4,7 +4,7 @@ struct ContentView: View {
     @EnvironmentObject private var deckStore: DeckStore
     @StateObject private var vm = GameViewModel()
     @State private var showImagePicker = false
-    @State private var showDeck = false
+    @State private var showDeck = ProcessInfo.processInfo.arguments.contains("--show-deck")
     @State private var pickerSource: CameraView.Source = .camera
 
     var body: some View {
@@ -69,111 +69,272 @@ struct ContentView: View {
     }
 
     private var idleView: some View {
-        ScrollView {
-            VStack(spacing: 28) {
-                VStack(spacing: 12) {
-                    Image(systemName: "camera.viewfinder")
-                        .font(.system(size: 72))
-                        .foregroundColor(.accentColor)
-                    Text("Snap Fighter")
-                        .font(.largeTitle)
-                        .bold()
-                    Text("選擇你的進場方式，直接抓怪，或用已收藏的牌組開戰。")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
-                }
+        ZStack {
+            Image("ArcaneArena")
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
 
+            RPGTheme.midnight.opacity(0.82)
+                .ignoresSafeArea()
+
+            ScrollView(showsIndicators: false) {
                 VStack(spacing: 16) {
-                    battleModeCard(
-                        title: "快速開戰",
-                        subtitle: "先用系統提供的試玩牌組直接打一場，熟悉指令與主副將節奏後再抓怪。",
-                        accent: .orange,
-                        systemImage: "bolt.shield"
-                    ) {
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("試玩牌組：閃焰新兵 + 潮壁見習生")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
+                    lobbyHeader
+                    lobbyHero
+                    quickBattlePanel
 
-                            Button {
-                                vm.prepareStarterBattle()
-                            } label: {
-                                Label("立刻試玩", systemImage: "play.fill")
-                                    .font(.headline)
-                                    .bold()
-                                    .frame(maxWidth: .infinity)
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .tint(.orange)
-                        }
+                    HStack(alignment: .top, spacing: 12) {
+                        captureMissionPanel
+                        deckMissionPanel
                     }
 
-                    battleModeCard(
-                        title: "抓怪對戰",
-                        subtitle: "現場拍攝或從照片挑圖，隨機生成兩張新卡進場。",
-                        accent: .accentColor,
-                        systemImage: "camera.macro"
-                    ) {
-                        VStack(spacing: 12) {
-                            Button {
-                                openPicker(.camera)
-                            } label: {
-                                Label("拍照抓怪", systemImage: "camera.fill")
-                                    .font(.headline)
-                                    .bold()
-                                    .frame(maxWidth: .infinity)
-                            }
-                            .buttonStyle(.borderedProminent)
-
-                            Button {
-                                openPicker(.photoLibrary)
-                            } label: {
-                                Label("使用照片", systemImage: "photo.on.rectangle")
-                                    .font(.headline)
-                                    .bold()
-                                    .frame(maxWidth: .infinity)
-                            }
-                            .buttonStyle(.bordered)
-                        }
-                    }
-
-                    battleModeCard(
-                        title: "牌組對戰",
-                        subtitle: deckModeSubtitle,
-                        accent: .red,
-                        systemImage: "shield.checkered"
-                    ) {
-                        VStack(spacing: 12) {
-                            Button {
-                                vm.prepareBattleAgainstAI(with: deckStore.activeBattleDeck)
-                            } label: {
-                                Label("挑戰 AI 對手", systemImage: "flame.fill")
-                                    .font(.headline)
-                                    .bold()
-                                    .frame(maxWidth: .infinity)
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .tint(.red)
-                            .disabled(deckStore.activeBattleDeck.count != 2)
-
-                            Button {
-                                showDeck = true
-                            } label: {
-                                Label("設定出戰牌組", systemImage: "square.stack.3d.up")
-                                    .font(.headline)
-                                    .bold()
-                                    .frame(maxWidth: .infinity)
-                            }
-                            .buttonStyle(.bordered)
-                        }
-                    }
+                    Text("拍下現實物件，召喚只屬於你的戰鬥卡。")
+                        .font(.caption)
+                        .foregroundStyle(RPGTheme.mist)
+                        .padding(.top, 2)
                 }
-
-                deckPreviewSection
+                .padding(.horizontal, 16)
+                .padding(.top, 44)
+                .padding(.bottom, 30)
             }
-            .padding(.horizontal, 24)
-            .padding(.vertical, 28)
+        }
+        .preferredColorScheme(.dark)
+    }
+
+    private var lobbyHeader: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "camera.aperture")
+                .font(.title2.weight(.black))
+                .foregroundStyle(RPGTheme.gold)
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text("SNAP FIGHTER")
+                    .font(.system(size: 18, weight: .black, design: .rounded))
+                    .tracking(1.2)
+                    .foregroundStyle(.white)
+                Text("ARCANE CARD BATTLE")
+                    .font(.system(size: 8, weight: .bold, design: .rounded))
+                    .tracking(1.6)
+                    .foregroundStyle(RPGTheme.gold)
+            }
+
+            Spacer()
+
+            Button {
+                showDeck = true
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "rectangle.stack.fill")
+                    Text("\(deckStore.deck.count)")
+                }
+                .font(.subheadline.weight(.black))
+                .foregroundStyle(RPGTheme.parchment)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 9)
+                .background(RPGTheme.panelRaised.opacity(0.96))
+                .clipShape(Capsule())
+                .overlay(Capsule().stroke(RPGTheme.goldDark, lineWidth: 1))
+            }
+            .accessibilityLabel("開啟牌組，目前有 \(deckStore.deck.count) 張卡")
+        }
+    }
+
+    private var lobbyHero: some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("冒險大廳")
+                    .font(.system(size: 30, weight: .black, design: .rounded))
+                    .foregroundStyle(.white)
+                Text("現實召喚 × 卡牌決鬥")
+                    .font(.subheadline.weight(.bold))
+                    .foregroundStyle(RPGTheme.gold)
+                Text("召喚身邊的物件，編成兩張卡牌，向魔法競技場發起挑戰。")
+                    .font(.caption)
+                    .foregroundStyle(RPGTheme.mist)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            ZStack {
+                lobbyArt("TideBottleGuardian", rotation: 8, offset: CGSize(width: 23, height: 5))
+                lobbyArt("FlameLampKnight", rotation: -7, offset: CGSize(width: -23, height: 0))
+            }
+            .frame(width: 140, height: 154)
+        }
+        .padding(16)
+        .background(RPGTheme.panel.opacity(0.9))
+        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .stroke(RPGTheme.goldDark.opacity(0.85), lineWidth: 1)
+        }
+    }
+
+    private func lobbyArt(_ name: String, rotation: Double, offset: CGSize) -> some View {
+        Image(name)
+            .resizable()
+            .scaledToFill()
+            .frame(width: 88, height: 128)
+            .clipped()
+            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .stroke(RPGTheme.gold, lineWidth: 3)
+            }
+            .rotationEffect(.degrees(rotation))
+            .offset(offset)
+            .shadow(color: .black.opacity(0.55), radius: 6, y: 5)
+    }
+
+    private var quickBattlePanel: some View {
+        VStack(alignment: .leading, spacing: 11) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("STORY 01")
+                        .font(.caption2.weight(.black))
+                        .tracking(1.4)
+                        .foregroundStyle(RPGTheme.gold)
+                    Text("初次召喚試煉")
+                        .font(.title3.weight(.black))
+                        .foregroundStyle(.white)
+                    Text("使用炎燈先鋒與潮瓶守衛，熟悉四種戰鬥指令。")
+                        .font(.caption)
+                        .foregroundStyle(RPGTheme.mist)
+                }
+                Spacer()
+                Image(systemName: "flag.checkered.2.crossed")
+                    .font(.title2.weight(.bold))
+                    .foregroundStyle(RPGTheme.gold)
+            }
+
+            Button {
+                vm.prepareStarterBattle()
+            } label: {
+                HStack {
+                    Image(systemName: "play.fill")
+                    Text("快速開戰")
+                    Spacer()
+                    Text("推薦")
+                        .font(.caption2.weight(.black))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(RPGTheme.ink.opacity(0.12))
+                        .clipShape(Capsule())
+                }
+                .font(.headline.weight(.black))
+                .foregroundStyle(RPGTheme.ink)
+                .padding(.horizontal, 16)
+                .frame(height: 48)
+                .background(RPGTheme.gold)
+                .clipShape(RoundedRectangle(cornerRadius: 13, style: .continuous))
+            }
+        }
+        .padding(15)
+        .background(RPGTheme.panelRaised.opacity(0.94))
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .stroke(RPGTheme.gold.opacity(0.55), lineWidth: 1)
+        }
+    }
+
+    private var captureMissionPanel: some View {
+        VStack(alignment: .leading, spacing: 9) {
+            missionPanelHeader(icon: "camera.fill", title: "現實召喚", subtitle: "拍攝物件製成卡牌")
+
+            Button {
+                openPicker(.camera)
+            } label: {
+                Label("拍照抓怪", systemImage: "viewfinder")
+                    .font(.subheadline.weight(.black))
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 42)
+            }
+            .foregroundStyle(RPGTheme.ink)
+            .background(RPGTheme.parchment)
+            .clipShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
+
+            Button {
+                openPicker(.photoLibrary)
+            } label: {
+                Label("使用照片", systemImage: "photo.on.rectangle")
+                    .font(.caption.weight(.bold))
+                    .frame(maxWidth: .infinity)
+            }
+            .foregroundStyle(RPGTheme.gold)
+        }
+        .padding(13)
+        .frame(maxWidth: .infinity, minHeight: 160, alignment: .topLeading)
+        .background(RPGTheme.panel.opacity(0.94))
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(RPGTheme.goldDark.opacity(0.8), lineWidth: 1)
+        }
+    }
+
+    private var deckMissionPanel: some View {
+        VStack(alignment: .leading, spacing: 9) {
+            missionPanelHeader(icon: "rectangle.stack.fill", title: "牌組遠征", subtitle: deckStore.activeBattleDeck.count == 2 ? "隊伍已完成編成" : "選擇主將與副將")
+
+            if deckStore.activeBattleDeck.count == 2 {
+                Button {
+                    vm.prepareBattleAgainstAI(with: deckStore.activeBattleDeck)
+                } label: {
+                    Label("挑戰 AI", systemImage: "flame.fill")
+                        .font(.subheadline.weight(.black))
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 42)
+                }
+                .foregroundStyle(.white)
+                .background(Color(red: 0.72, green: 0.14, blue: 0.12))
+                .clipShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
+            } else {
+                Button {
+                    showDeck = true
+                } label: {
+                    Label("編成牌組", systemImage: "plus")
+                        .font(.subheadline.weight(.black))
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 42)
+                }
+                .foregroundStyle(RPGTheme.ink)
+                .background(RPGTheme.parchment)
+                .clipShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
+            }
+
+            Button {
+                showDeck = true
+            } label: {
+                Text("查看卡庫 · \(deckStore.deck.count) 張")
+                    .font(.caption.weight(.bold))
+                    .frame(maxWidth: .infinity)
+            }
+            .foregroundStyle(RPGTheme.gold)
+        }
+        .padding(13)
+        .frame(maxWidth: .infinity, minHeight: 160, alignment: .topLeading)
+        .background(RPGTheme.panel.opacity(0.94))
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(RPGTheme.goldDark.opacity(0.8), lineWidth: 1)
+        }
+    }
+
+    private func missionPanelHeader(icon: String, title: String, subtitle: String) -> some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Image(systemName: icon)
+                .font(.headline.weight(.black))
+                .foregroundStyle(RPGTheme.gold)
+            Text(title)
+                .font(.headline.weight(.black))
+                .foregroundStyle(.white)
+            Text(subtitle)
+                .font(.system(size: 10, weight: .medium))
+                .foregroundStyle(RPGTheme.mist)
+                .lineLimit(2)
         }
     }
 

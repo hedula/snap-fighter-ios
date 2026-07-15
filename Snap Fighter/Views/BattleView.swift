@@ -9,461 +9,459 @@ struct BattleView: View {
     @State private var hasReportedBattleEnd = false
     @State private var m1Shake = false
     @State private var m2Shake = false
-    @State private var m1DamageText: String? = nil
-    @State private var m2DamageText: String? = nil
+    @State private var m1DamageText: String?
+    @State private var m2DamageText: String?
     @State private var m1DamageOpacity: Double = 0
     @State private var m2DamageOpacity: Double = 0
 
     init(player1: Monster, player2: Monster, reservePlayer: Monster? = nil, onBattleEnd: @escaping (Monster) -> Void) {
-        let session = BattleSession(player: player1, opponent: player2, reservePlayer: reservePlayer)
-        _battle = State(initialValue: session)
+        _battle = State(initialValue: BattleSession(player: player1, opponent: player2, reservePlayer: reservePlayer))
         self.onBattleEnd = onBattleEnd
     }
 
     var body: some View {
-        ZStack {
-            BattleArenaBackdropView(
-                coordinate: sceneLocation.coordinate,
-                lookAroundSnapshot: sceneLocation.lookAroundSnapshot,
-                isUsingLiveArena: sceneLocation.isUsingLiveArena
-            )
+        GeometryReader { proxy in
+            ZStack {
+                BattleArenaBackdropView(
+                    coordinate: sceneLocation.coordinate,
+                    lookAroundSnapshot: sceneLocation.lookAroundSnapshot,
+                    isUsingLiveArena: sceneLocation.isUsingLiveArena
+                )
 
-            ScrollView {
-                VStack(spacing: 16) {
+                VStack(spacing: 0) {
                     battleHeader
-                    arenaControlPanel
-                    combatantPanel(
-                        title: "敵方前線",
-                        monster: battle.opponent,
-                        isPlayerSide: false,
-                        isActiveTurn: battle.presentationTone == .opponent,
-                        statusTags: battle.opponentStatusTags,
-                        damageText: m2DamageText,
-                        damageOpacity: m2DamageOpacity
-                    )
-                    .offset(x: m2Shake ? 8 : 0)
+                        .frame(height: 62)
+
+                    arcaneBattlefield
+                        .frame(maxHeight: .infinity)
 
                     eventBanner
+                        .padding(.horizontal, 14)
+                        .padding(.bottom, 6)
 
-                    combatantPanel(
-                        title: "我方前線",
-                        monster: battle.player,
-                        isPlayerSide: true,
-                        isActiveTurn: battle.presentationTone == .player,
-                        statusTags: battle.playerStatusTags,
-                        damageText: m1DamageText,
-                        damageOpacity: m1DamageOpacity
-                    )
-                    .offset(x: m1Shake ? -8 : 0)
-
-                    reservePanel
-                    actionPanel
+                    commandHand(availableWidth: proxy.size.width)
+                        .frame(height: 194)
                 }
-                .padding(.horizontal, 16)
-                .padding(.top, 16)
-                .padding(.bottom, 28)
+                .padding(.top, 4)
             }
         }
-    }
-
-    private var arenaControlPanel: some View {
-        HStack(spacing: 14) {
-            VStack(alignment: .leading, spacing: 5) {
-                Text("BATTLEFIELD LINK")
-                    .font(.caption)
-                    .fontWeight(.heavy)
-                    .foregroundStyle(.white.opacity(0.55))
-                Text(sceneLocation.arenaTitle)
-                    .font(.headline)
-                    .foregroundStyle(.white)
-                Text(sceneLocation.arenaSubtitle)
-                    .font(.caption)
-                    .foregroundStyle(.white.opacity(0.68))
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-
-            Spacer(minLength: 12)
-
-            Button {
-                sceneLocation.toggleLiveArena()
-            } label: {
-                HStack(spacing: 8) {
-                    if sceneLocation.isLoadingLocation {
-                        ProgressView()
-                            .tint(.white)
-                    } else {
-                        Image(systemName: sceneLocation.isUsingLiveArena ? "location.slash.fill" : "location.fill")
-                    }
-
-                    Text(sceneLocation.actionTitle)
-                        .font(.subheadline)
-                        .fontWeight(.bold)
-                }
-                .foregroundStyle(.white)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 12)
-                .background(sceneLocation.isUsingLiveArena ? .white.opacity(0.12) : .orange.opacity(0.42))
-                .clipShape(Capsule())
-            }
-            .disabled(sceneLocation.isLoadingLocation)
-        }
-        .padding(16)
-        .background(.black.opacity(0.22))
-        .overlay(
-            RoundedRectangle(cornerRadius: 22)
-                .stroke(.white.opacity(0.12), lineWidth: 1)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 22))
+        .preferredColorScheme(.dark)
     }
 
     private var battleHeader: some View {
-        HStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("SNAP FIGHT")
+        ZStack {
+            HStack(spacing: 10) {
+                Rectangle()
+                    .fill(Color.arcaneGold.opacity(0.5))
+                    .frame(height: 1)
+                Image(systemName: "sparkle")
                     .font(.caption)
-                    .fontWeight(.heavy)
-                    .foregroundStyle(.white.opacity(0.75))
-                Text(battle.headerTitle)
-                    .font(.title2)
-                    .bold()
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Color.arcaneGold)
+                Rectangle()
+                    .fill(Color.arcaneGold.opacity(0.5))
+                    .frame(height: 1)
+            }
+            .padding(.horizontal, 68)
+
+            VStack(spacing: 1) {
+                Text(battleTitle)
+                    .font(.system(size: 24, weight: .bold, design: .serif))
+                    .foregroundStyle(Color.parchment)
+                    .shadow(color: .black.opacity(0.8), radius: 4, y: 2)
+                Text("回合 \(battle.roundNumber)")
+                    .font(.system(size: 12, weight: .semibold, design: .serif))
+                    .foregroundStyle(Color.arcaneGold.opacity(0.9))
             }
 
-            Spacer()
-
-            VStack(alignment: .trailing, spacing: 8) {
-                statusCapsule(label: battle.turnLabel, tint: turnTint, emphasis: true)
-
-                HStack(spacing: 8) {
-                    ForEach(battle.headerTags, id: \.self) { tag in
-                        statusCapsule(label: tag, tint: .white.opacity(0.18))
-                    }
-                }
-            }
-        }
-        .padding(16)
-        .background(.white.opacity(0.08))
-        .overlay(
-            RoundedRectangle(cornerRadius: 22)
-                .stroke(.white.opacity(0.12), lineWidth: 1)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 22))
-    }
-
-    private var eventBanner: some View {
-        VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Label("本回合事件", systemImage: "text.bubble.fill")
-                    .font(.headline)
-                    .foregroundStyle(.white)
+                locationControlButton
                 Spacer()
+
                 if isResolvingTurn {
                     ProgressView()
-                        .tint(.white)
+                        .tint(Color.arcaneGold)
+                        .controlSize(.small)
                 }
             }
-
-            Text(battle.latestEvent.title)
-                .font(.body)
-                .fontWeight(.semibold)
-                .foregroundStyle(.white)
-
-            if let detail = battle.latestEvent.detail, !detail.isEmpty {
-                Text(detail)
-                    .font(.subheadline)
-                    .foregroundStyle(.white.opacity(0.72))
-                    .fixedSize(horizontal: false, vertical: true)
-            }
+            .padding(.horizontal, 14)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(16)
-        .background(Color(red: 0.19, green: 0.10, blue: 0.09).opacity(0.88))
-        .overlay(
-            RoundedRectangle(cornerRadius: 20)
-                .stroke(.orange.opacity(0.35), lineWidth: 1)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 20))
     }
 
-    private var reservePanel: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("待命副將")
-                    .font(.headline)
-                    .foregroundStyle(.white)
-                Spacer()
-                if battle.reservePlayer != nil {
-                    statusCapsule(label: battle.reservePlayerStatusHint, tint: .green.opacity(0.28))
+    private var locationControlButton: some View {
+        Button {
+            sceneLocation.toggleLiveArena()
+        } label: {
+            ZStack {
+                Circle()
+                    .fill(Color.black.opacity(0.48))
+                Circle()
+                    .stroke(Color.arcaneGold.opacity(0.72), lineWidth: 1)
+
+                if sceneLocation.isLoadingLocation {
+                    ProgressView()
+                        .tint(Color.parchment)
+                        .controlSize(.mini)
                 } else {
-                    statusCapsule(label: "不可換人", tint: .white.opacity(0.14))
+                    Image(systemName: sceneLocation.isUsingLiveArena ? "location.fill" : "map.fill")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(Color.parchment)
                 }
             }
-
-            if let reserve = battle.reservePlayer {
-                HStack(spacing: 12) {
-                    artworkThumbnail(for: reserve)
-                        .frame(width: 72, height: 72)
-
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(reserve.name)
-                            .font(.headline)
-                            .foregroundStyle(.white)
-                        HStack(spacing: 8) {
-                            statusCapsule(label: reserve.element.rawValue, tint: Color(hex: reserve.element.gradientColors[0]).opacity(0.35))
-                            statusCapsule(label: "Lv. \(reserve.level)", tint: .white.opacity(0.14))
-                        }
-                        Text("\(battle.reservePlayerStatusHint ?? "待命支援")，換人會消耗本回合。")
-                            .font(.subheadline)
-                            .foregroundStyle(.white.opacity(0.72))
-                    }
-                    Spacer()
-                }
-            } else {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("目前沒有副將")
-                        .font(.headline)
-                        .foregroundStyle(.white.opacity(0.82))
-                    Text("這一戰無法使用換副將，請以當前前線角色完成戰鬥。")
-                        .font(.subheadline)
-                        .foregroundStyle(.white.opacity(0.62))
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-            }
+            .frame(width: 38, height: 38)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(16)
-        .background(.white.opacity(0.08))
-        .overlay(
-            RoundedRectangle(cornerRadius: 20)
-                .stroke(.white.opacity(0.1), lineWidth: 1)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 20))
+        .disabled(sceneLocation.isLoadingLocation)
+        .accessibilityLabel(sceneLocation.actionTitle)
+        .accessibilityHint(sceneLocation.arenaSubtitle)
     }
 
-    private var actionPanel: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("本回合指令")
-                    .font(.headline)
-                    .foregroundStyle(.white)
-                Spacer()
-                Text(actionPanelHint)
-                    .font(.subheadline)
-                    .foregroundStyle(.white.opacity(0.7))
-            }
+    private var arcaneBattlefield: some View {
+        GeometryReader { proxy in
+            let enemyWidth = min(170, proxy.size.width * 0.43)
+            let playerWidth = min(152, proxy.size.width * 0.39)
 
-            let columns = [
-                GridItem(.flexible(), spacing: 12),
-                GridItem(.flexible(), spacing: 12)
-            ]
+            ZStack {
+                fighterNameplate(monster: battle.opponent, isPlayerSide: false)
+                    .frame(width: min(210, proxy.size.width * 0.55))
+                    .position(x: proxy.size.width * 0.29, y: 88)
 
-            LazyVGrid(columns: columns, spacing: 12) {
-                actionButton(.attack, tint: .orange)
-                actionButton(.skill, tint: .pink)
-                actionButton(.defend, tint: .blue)
-                actionButton(.swap, tint: .green)
-            }
+                battleCard(
+                    monster: battle.opponent,
+                    isPlayerSide: false,
+                    damageText: m2DamageText,
+                    damageOpacity: m2DamageOpacity
+                )
+                .frame(width: enemyWidth, height: enemyWidth * 1.34)
+                .rotationEffect(.degrees(4))
+                .offset(x: m2Shake ? 8 : 0)
+                .position(x: proxy.size.width - enemyWidth * 0.56, y: enemyWidth * 0.71)
 
-            if let unavailableReason = battle.actionPresentation(for: .swap).disabledReason ?? resolvingUnavailableReason {
-                Text(unavailableReason)
-                    .font(.footnote)
-                    .foregroundStyle(.white.opacity(0.6))
+                elementRelationshipWheel
+                    .position(x: proxy.size.width * 0.53, y: proxy.size.height * 0.54)
+
+                battleCard(
+                    monster: battle.player,
+                    isPlayerSide: true,
+                    damageText: m1DamageText,
+                    damageOpacity: m1DamageOpacity
+                )
+                .frame(width: playerWidth, height: playerWidth * 1.34)
+                .rotationEffect(.degrees(-4))
+                .offset(x: m1Shake ? -8 : 0)
+                .position(x: playerWidth * 0.63, y: proxy.size.height - playerWidth * 0.72)
+
+                reserveBookmark
+                    .frame(width: 76, height: 112)
+                    .position(x: proxy.size.width - 48, y: proxy.size.height * 0.72)
             }
         }
-        .padding(16)
-        .background(.white.opacity(0.1))
-        .overlay(
-            RoundedRectangle(cornerRadius: 22)
-                .stroke(.white.opacity(0.12), lineWidth: 1)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 22))
-        .opacity(battle.isFinished ? 0.72 : 1)
     }
 
-    @ViewBuilder
-    private func combatantPanel(
-        title: String,
+    private func battleCard(
         monster: Monster,
         isPlayerSide: Bool,
-        isActiveTurn: Bool,
-        statusTags: [String],
         damageText: String?,
         damageOpacity: Double
     ) -> some View {
         ZStack(alignment: .topTrailing) {
-            HStack(alignment: .top, spacing: 14) {
-                artworkThumbnail(for: monster)
-                    .frame(width: 92, height: 92)
-
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack(alignment: .top) {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(title.uppercased())
-                                .font(.caption)
-                                .fontWeight(.bold)
-                                .foregroundStyle(.white.opacity(0.55))
-                            Text(monster.name)
-                                .font(.title3)
-                                .bold()
-                                .foregroundStyle(.white)
-                                .lineLimit(2)
-                            Text(monster.skill)
-                                .font(.subheadline)
-                                .foregroundStyle(.white.opacity(0.7))
-                                .lineLimit(1)
-                        }
-
-                        Spacer()
-
-                        VStack(alignment: .trailing, spacing: 6) {
-                            statusCapsule(label: monster.element.rawValue, tint: elementTint(for: monster))
-                            statusCapsule(label: "Lv. \(monster.level)", tint: .white.opacity(0.14))
-                        }
-                    }
-
-                    VStack(alignment: .leading, spacing: 6) {
-                        HStack {
-                            Text("HP")
-                                .font(.caption)
-                                .fontWeight(.bold)
-                                .foregroundStyle(.white.opacity(0.72))
-                            Spacer()
-                            Text("\(monster.currentHp) / \(monster.hp)")
-                                .font(.subheadline)
-                                .fontWeight(.semibold)
-                                .foregroundStyle(.white)
-                        }
-
-                        ProgressView(value: Double(monster.currentHp), total: Double(max(monster.hp, 1)))
-                            .tint(isPlayerSide ? .orange : .mint)
-                            .scaleEffect(x: 1, y: 1.4, anchor: .center)
-                    }
-
-                    HStack(spacing: 10) {
-                        statPill(label: "ATK", value: monster.atk)
-                        statPill(label: "DEF", value: monster.def)
-                    }
-
-                    if !statusTags.isEmpty {
-                        statusTagWrap(tags: statusTags)
-                    }
+            VStack(spacing: 0) {
+                HStack(spacing: 6) {
+                    Text(monster.name)
+                        .font(.system(size: 15, weight: .bold, design: .serif))
+                        .foregroundStyle(Color.ink)
+                        .lineLimit(1)
+                    Spacer(minLength: 2)
+                    Image(systemName: elementIcon(for: monster.element))
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundStyle(Color.ink)
+                        .frame(width: 24, height: 24)
+                        .background(elementColor(for: monster.element))
+                        .clipShape(Circle())
                 }
+                .padding(.horizontal, 10)
+                .frame(height: 34)
+
+                artwork(for: monster)
+                    .overlay(alignment: .topTrailing) {
+                        Text("Lv. \(monster.level)")
+                            .font(.system(size: 10, weight: .bold, design: .serif))
+                            .foregroundStyle(Color.parchment)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 3)
+                            .background(Color.black.opacity(0.78))
+                            .clipShape(UnevenRoundedRectangle(bottomLeadingRadius: 7))
+                    }
+                    .clipped()
+
+                VStack(spacing: 4) {
+                    HStack(alignment: .firstTextBaseline, spacing: 4) {
+                        Text("HP")
+                            .font(.system(size: 10, weight: .semibold, design: .serif))
+                        Text("\(monster.currentHp) / \(monster.hp)")
+                            .font(.system(size: 16, weight: .bold, design: .serif))
+                        Spacer(minLength: 0)
+                    }
+                    .foregroundStyle(Color.parchment)
+
+                    GeometryReader { hpProxy in
+                        ZStack(alignment: .leading) {
+                            Capsule().fill(Color.white.opacity(0.15))
+                            Capsule()
+                                .fill(isPlayerSide ? Color.ember : Color.cyanMagic)
+                                .frame(width: hpProxy.size.width * hpProgress(for: monster))
+                        }
+                    }
+                    .frame(height: 6)
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 8)
+                .background(Color.black.opacity(0.88))
             }
-            .padding(16)
-            .background(combatantBackground(isPlayerSide: isPlayerSide))
-            .overlay(
-                RoundedRectangle(cornerRadius: 24)
-                    .stroke(isActiveTurn ? turnTint.opacity(0.7) : .white.opacity(0.1), lineWidth: isActiveTurn ? 2 : 1)
-            )
-            .clipShape(RoundedRectangle(cornerRadius: 24))
+            .background(Color.parchment)
+            .clipShape(RoundedRectangle(cornerRadius: 14))
+            .overlay {
+                RoundedRectangle(cornerRadius: 14)
+                    .stroke(
+                        LinearGradient(
+                            colors: [Color.arcaneGold, .white.opacity(0.8), Color.arcaneGold.opacity(0.55)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: isPlayerSide ? 3 : 2
+                    )
+            }
+            .overlay {
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(Color.ink.opacity(0.5), lineWidth: 1)
+                    .padding(5)
+            }
+            .shadow(color: elementColor(for: monster.element).opacity(0.45), radius: 12)
 
             if let damageText {
                 Text(damageText)
-                    .font(.title2)
-                    .bold()
-                    .foregroundStyle(.red)
+                    .font(.system(size: 28, weight: .black, design: .rounded))
+                    .foregroundStyle(.white)
+                    .shadow(color: .red, radius: 5)
                     .opacity(damageOpacity)
-                    .padding(.top, -14)
-                    .padding(.trailing, 10)
+                    .offset(x: 8, y: -14)
             }
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(monster.name)，\(monster.element.rawValue)屬性，等級 \(monster.level)，生命 \(monster.currentHp) / \(monster.hp)")
+    }
+
+    private func artwork(for monster: Monster) -> some View {
+        GeometryReader { proxy in
+            Image(uiImage: displayArtwork(for: monster))
+                .resizable()
+                .scaledToFill()
+                .frame(width: proxy.size.width, height: proxy.size.height)
+                .clipped()
         }
     }
 
-    private func artworkThumbnail(for monster: Monster) -> some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 18)
-                .fill(
-                    LinearGradient(
-                        colors: monster.element.gradientColors.map { Color(hex: $0).opacity(0.85) },
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-
-            if let artwork = monster.displayArtwork {
-                Image(uiImage: artwork)
-                    .resizable()
-                    .scaledToFill()
-                    .clipShape(RoundedRectangle(cornerRadius: 18))
-            } else {
-                Image(systemName: "sparkles.rectangle.stack.fill")
-                    .font(.system(size: 28))
-                    .foregroundStyle(.white.opacity(0.78))
+    private func fighterNameplate(monster: Monster, isPlayerSide: Bool) -> some View {
+        VStack(spacing: 5) {
+            HStack(spacing: 7) {
+                Image(systemName: elementIcon(for: monster.element))
+                    .font(.caption.bold())
+                    .foregroundStyle(Color.parchment)
+                    .frame(width: 28, height: 28)
+                    .background(elementColor(for: monster.element).opacity(0.7))
+                    .clipShape(Circle())
+                Text(monster.name)
+                    .font(.system(size: 16, weight: .bold, design: .serif))
+                    .foregroundStyle(Color.parchment)
+                    .lineLimit(1)
+                Spacer(minLength: 4)
+                Text("Lv. \(monster.level)")
+                    .font(.system(size: 11, weight: .semibold, design: .serif))
+                    .foregroundStyle(Color.parchment.opacity(0.9))
             }
-        }
-        .overlay(
-            RoundedRectangle(cornerRadius: 18)
-                .stroke(.white.opacity(0.16), lineWidth: 1)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 18))
-    }
 
-    private func statusTagWrap(tags: [String]) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 8) {
-                ForEach(tags, id: \.self) { tag in
-                    statusCapsule(label: tag, tint: .white.opacity(0.14))
+            HStack(spacing: 7) {
+                Text("HP")
+                    .font(.system(size: 10, weight: .bold, design: .serif))
+                    .foregroundStyle(Color.arcaneGold)
+                GeometryReader { hpProxy in
+                    ZStack(alignment: .leading) {
+                        Capsule().fill(Color.white.opacity(0.12))
+                        Capsule()
+                            .fill(isPlayerSide ? Color.ember : Color.cyanMagic)
+                            .frame(width: hpProxy.size.width * hpProgress(for: monster))
+                    }
                 }
+                .frame(height: 6)
+                Text("\(monster.currentHp) / \(monster.hp)")
+                    .font(.system(size: 11, weight: .bold, design: .serif))
+                    .foregroundStyle(Color.parchment)
             }
-        }
-    }
-
-    private func statPill(label: String, value: Int) -> some View {
-        HStack(spacing: 6) {
-            Text(label)
-                .font(.caption2)
-                .fontWeight(.bold)
-                .foregroundStyle(.white.opacity(0.7))
-            Text("\(value)")
-                .font(.subheadline)
-                .fontWeight(.semibold)
-                .foregroundStyle(.white)
         }
         .padding(.horizontal, 10)
-        .padding(.vertical, 6)
-        .background(.white.opacity(0.1))
-        .clipShape(Capsule())
-    }
-
-    private func statusCapsule(label: String?, tint: Color, emphasis: Bool = false) -> some View {
-        Group {
-            if let label, !label.isEmpty {
-                Text(label)
-                    .font(emphasis ? .subheadline : .caption)
-                    .fontWeight(emphasis ? .bold : .semibold)
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, emphasis ? 12 : 10)
-                    .padding(.vertical, emphasis ? 8 : 6)
-                    .background(tint)
-                    .clipShape(Capsule())
-            }
+        .padding(.vertical, 7)
+        .background(Color.black.opacity(0.64))
+        .overlay(alignment: .bottom) {
+            Rectangle().fill(Color.arcaneGold.opacity(0.7)).frame(height: 1)
         }
     }
 
-    private func actionButton(_ action: BattleAction, tint: Color) -> some View {
+    private var elementRelationshipWheel: some View {
+        VStack(spacing: 5) {
+            Image(systemName: "bolt.circle.fill")
+                .font(.title3)
+                .foregroundStyle(Color.arcaneGold)
+            HStack(spacing: 10) {
+                Image(systemName: "flame.fill").foregroundStyle(Color.ember)
+                Image(systemName: "arrow.right").foregroundStyle(Color.arcaneGold.opacity(0.8))
+                Image(systemName: "drop.fill").foregroundStyle(Color.cyanMagic)
+                Image(systemName: "arrow.right").foregroundStyle(Color.arcaneGold.opacity(0.8))
+                Image(systemName: "leaf.fill").foregroundStyle(.green)
+            }
+            .font(.caption.bold())
+        }
+        .padding(8)
+        .background(Color.black.opacity(0.28), in: Capsule())
+        .accessibilityLabel("屬性相剋提示")
+    }
+
+    private var reserveBookmark: some View {
+        let presentation = battle.actionPresentation(for: .swap)
+
+        return Button {
+            Task { await handlePlayerAction(.swap) }
+        } label: {
+            VStack(spacing: 6) {
+                if let reserve = battle.reservePlayer {
+                    Image(uiImage: displayArtwork(for: reserve))
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 38, height: 38)
+                        .clipShape(Circle())
+                        .overlay(Circle().stroke(Color.arcaneGold, lineWidth: 1))
+                    Text("待命")
+                        .font(.system(size: 12, weight: .bold, design: .serif))
+                    Text(reserve.name)
+                        .font(.system(size: 10, weight: .semibold, design: .serif))
+                        .lineLimit(2)
+                } else {
+                    Image(systemName: "person.crop.circle.badge.xmark")
+                        .font(.title2)
+                    Text("無副將")
+                        .font(.caption.bold())
+                }
+            }
+            .foregroundStyle(Color.parchment)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .padding(6)
+            .background(Color(red: 0.12, green: 0.08, blue: 0.18).opacity(0.9))
+            .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.arcaneGold.opacity(0.72), lineWidth: 1))
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+        }
+        .buttonStyle(.plain)
+        .disabled(!presentation.isEnabled || isResolvingTurn)
+        .opacity(presentation.isEnabled ? 1 : 0.55)
+        .accessibilityHint(presentation.disabledReason ?? "切換待命副將，並消耗本回合")
+    }
+
+    private var eventBanner: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "compass.drawing")
+                .font(.headline)
+                .foregroundStyle(Color.ink)
+
+            Text(eventCopy)
+                .font(.system(size: 13, weight: .semibold, design: .serif))
+                .foregroundStyle(Color.ink)
+                .lineLimit(2)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            if isResolvingTurn {
+                ProgressView()
+                    .tint(Color.ink)
+                    .controlSize(.small)
+            }
+        }
+        .padding(.horizontal, 14)
+        .frame(minHeight: 48)
+        .background(Color.parchment.opacity(0.96))
+        .overlay(RoundedRectangle(cornerRadius: 7).stroke(Color.arcaneGold.opacity(0.78), lineWidth: 1))
+        .clipShape(RoundedRectangle(cornerRadius: 7))
+        .shadow(color: .black.opacity(0.4), radius: 8, y: 4)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(eventCopy)
+    }
+
+    private func commandHand(availableWidth: CGFloat) -> some View {
+        let cardWidth = min(98, (availableWidth + 4) / 4)
+
+        return HStack(alignment: .bottom, spacing: -8) {
+            commandCard(.attack, tint: Color(red: 0.45, green: 0.24, blue: 0.04), angle: -4)
+                .frame(width: cardWidth)
+            commandCard(.skill, tint: Color(red: 0.48, green: 0.06, blue: 0.08), angle: -1, isPrimary: true)
+                .frame(width: cardWidth)
+                .offset(y: -7)
+                .zIndex(2)
+            commandCard(.defend, tint: Color(red: 0.04, green: 0.18, blue: 0.36), angle: 1)
+                .frame(width: cardWidth)
+            commandCard(.swap, tint: Color(red: 0.04, green: 0.27, blue: 0.14), angle: 4)
+                .frame(width: cardWidth)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+        .padding(.horizontal, 10)
+        .padding(.bottom, 8)
+        .background(
+            LinearGradient(
+                colors: [.clear, .black.opacity(0.58), .black.opacity(0.9)],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        )
+    }
+
+    private func commandCard(_ action: BattleAction, tint: Color, angle: Double, isPrimary: Bool = false) -> some View {
         let presentation = battle.actionPresentation(for: action)
+
         return Button {
             Task { await handlePlayerAction(action) }
         } label: {
-            VStack(alignment: .leading, spacing: 6) {
-                Label(action.title, systemImage: action.systemImage)
-                    .font(.headline)
-                    .bold()
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                Text(action.subtitle)
-                    .font(.caption)
-                    .multilineTextAlignment(.leading)
-                    .foregroundStyle(.white.opacity(0.82))
-                    .frame(maxWidth: .infinity, alignment: .leading)
+            VStack(spacing: 8) {
+                Image(systemName: action.systemImage)
+                    .font(.system(size: 30, weight: .bold))
+                    .symbolRenderingMode(.hierarchical)
+                Text(action.title)
+                    .font(.system(size: 18, weight: .bold, design: .serif))
+                    .lineLimit(1)
+                Rectangle()
+                    .fill(Color.arcaneGold.opacity(0.6))
+                    .frame(height: 1)
+                Text(shortSubtitle(for: action))
+                    .font(.system(size: 10, weight: .medium))
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.85)
             }
-            .frame(maxWidth: .infinity, minHeight: 78, alignment: .leading)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 12)
+            .foregroundStyle(Color.parchment)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 14)
+            .background(tint)
+            .overlay {
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(isPrimary ? Color.orange : Color.arcaneGold.opacity(0.85), lineWidth: isPrimary ? 3 : 1.5)
+            }
+            .overlay {
+                RoundedRectangle(cornerRadius: 7)
+                    .stroke(Color.white.opacity(0.12), lineWidth: 1)
+                    .padding(4)
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .shadow(color: isPrimary ? .orange.opacity(0.75) : .black.opacity(0.65), radius: isPrimary ? 10 : 5, y: 3)
         }
-        .buttonStyle(.borderedProminent)
-        .tint(tint)
+        .buttonStyle(.plain)
+        .rotationEffect(.degrees(angle), anchor: .bottom)
         .disabled(!presentation.isEnabled || isResolvingTurn)
-        .opacity((!presentation.isEnabled || battle.isFinished) ? 0.7 : 1)
+        .opacity((presentation.isEnabled && !battle.isFinished) ? 1 : 0.48)
+        .accessibilityLabel(action.title)
+        .accessibilityHint(presentation.disabledReason ?? action.subtitle)
     }
 
     private func handlePlayerAction(_ action: BattleAction) async {
@@ -528,46 +526,72 @@ struct BattleView: View {
         }
     }
 
-    private var turnTint: Color {
+    private var battleTitle: String {
         switch battle.presentationTone {
-        case .player:
-            return .orange.opacity(0.82)
-        case .opponent:
-            return .blue.opacity(0.76)
-        case .finished:
-            return .white.opacity(0.3)
+        case .player: return "你的回合"
+        case .opponent: return "敵方回合"
+        case .finished: return "戰鬥結束"
         }
     }
 
-    private var actionPanelHint: String {
-        if isResolvingTurn {
-            return "正在結算本回合"
+    private var eventCopy: String {
+        if let detail = battle.latestEvent.detail, !detail.isEmpty {
+            return "\(battle.latestEvent.title)，\(detail)"
+        }
+        return battle.latestEvent.title
+    }
+
+    private func hpProgress(for monster: Monster) -> CGFloat {
+        CGFloat(monster.currentHp) / CGFloat(max(monster.hp, 1))
+    }
+
+    private func shortSubtitle(for action: BattleAction) -> String {
+        switch action {
+        case .attack: return "穩定輸出"
+        case .skill: return battle.playerSkillCooldownRemaining > 0 ? "冷卻 \(battle.playerSkillCooldownRemaining)" : "爆發效果"
+        case .defend: return "下次減傷"
+        case .swap: return "消耗回合"
+        }
+    }
+
+    private func displayArtwork(for monster: Monster) -> UIImage {
+        if let artwork = monster.displayArtwork {
+            return artwork
         }
 
-        return battle.actionPanelHint
+        let assetName: String
+        switch monster.element {
+        case .fire:
+            assetName = "FlameLampKnight"
+        case .water, .grass:
+            assetName = "TideBottleGuardian"
+        case .electric, .dark, .normal:
+            assetName = "ThunderBellKnight"
+        }
+
+        return UIImage(named: assetName) ?? UIImage()
     }
 
-    private var resolvingUnavailableReason: String? {
-        isResolvingTurn ? "本回合正在結算中。" : nil
+    private func elementIcon(for element: Element) -> String {
+        switch element {
+        case .fire: return "flame.fill"
+        case .water: return "drop.fill"
+        case .grass: return "leaf.fill"
+        case .electric: return "bolt.fill"
+        case .dark: return "moon.stars.fill"
+        case .normal: return "circle.hexagongrid.fill"
+        }
     }
 
-    private func elementTint(for monster: Monster) -> Color {
-        Color(hex: monster.element.gradientColors[0]).opacity(0.38)
+    private func elementColor(for element: Element) -> Color {
+        Color(hex: element.gradientColors[0])
     }
+}
 
-    private func combatantBackground(isPlayerSide: Bool) -> some ShapeStyle {
-        LinearGradient(
-            colors: isPlayerSide
-                ? [
-                    Color(red: 0.36, green: 0.21, blue: 0.14).opacity(0.95),
-                    Color(red: 0.20, green: 0.12, blue: 0.12).opacity(0.92)
-                ]
-                : [
-                    Color(red: 0.10, green: 0.18, blue: 0.24).opacity(0.96),
-                    Color(red: 0.11, green: 0.11, blue: 0.16).opacity(0.92)
-                ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-    }
+private extension Color {
+    static let arcaneGold = Color(red: 0.82, green: 0.66, blue: 0.33)
+    static let parchment = Color(red: 0.94, green: 0.88, blue: 0.72)
+    static let ink = Color(red: 0.12, green: 0.09, blue: 0.09)
+    static let cyanMagic = Color(red: 0.16, green: 0.82, blue: 0.86)
+    static let ember = Color(red: 0.95, green: 0.28, blue: 0.12)
 }

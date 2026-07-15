@@ -846,6 +846,21 @@ struct Snap_FighterTests {
         #expect(session.latestEvent.detail == "敵方行動中...")
     }
 
+    @Test func battleSessionAdvancesRoundAfterOpponentFinishes() {
+        var session = BattleSession(
+            player: Monster(name: "主將", element: .fire, hp: 90, atk: 40, def: 30, skill: "火盾"),
+            opponent: Monster(name: "對手", element: .water, hp: 90, atk: 40, def: 30, skill: "水盾")
+        )
+
+        #expect(session.roundNumber == 1)
+
+        _ = session.performPlayerAction(.defend)
+        #expect(session.roundNumber == 1)
+
+        _ = session.performOpponentAction(.defend)
+        #expect(session.roundNumber == 2)
+    }
+
     @Test func battleSessionSettlementEventReplacesLatestEventAfterFinish() {
         var session = BattleSession(
             player: Monster(name: "終結者", element: .fire, hp: 90, atk: 90, def: 20, skill: "烈焰終擊"),

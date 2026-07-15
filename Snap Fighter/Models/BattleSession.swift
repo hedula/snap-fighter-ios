@@ -96,6 +96,7 @@ struct BattleSession {
     private(set) var statusText: String
     private(set) var winner: Monster?
     private(set) var latestEvent: BattleEventPresentation
+    private(set) var roundNumber = 1
 
     private(set) var playerDefenseActive = false
     private(set) var opponentDefenseActive = false
@@ -301,6 +302,9 @@ struct BattleSession {
     mutating func performOpponentAction(_ action: BattleAction, damageRoll: Double = 1.0) -> BattleResolvedAction? {
         guard turn == .opponent, !isFinished else { return nil }
         let result = perform(action, actor: .opponent, damageRoll: damageRoll)
+        if turn == .player {
+            roundNumber += 1
+        }
         latestEvent = eventPresentation(for: result)
         return result
     }

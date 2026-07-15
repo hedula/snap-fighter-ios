@@ -32,41 +32,20 @@ struct BattleArenaBackdropView: View {
             }
 
             atmosphericOverlay
-            tacticalGrid
+
+            if isUsingLiveArena {
+                tacticalGrid
+            }
         }
     }
 
     private var fallbackBackdrop: some View {
-        ZStack {
-            LinearGradient(
-                colors: [
-                    Color(red: 0.06, green: 0.08, blue: 0.16),
-                    Color(red: 0.16, green: 0.08, blue: 0.10),
-                    Color(red: 0.04, green: 0.05, blue: 0.07)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-
-            RadialGradient(
-                colors: [
-                    .orange.opacity(0.32),
-                    .clear
-                ],
-                center: .bottomLeading,
-                startRadius: 40,
-                endRadius: 320
-            )
-
-            RadialGradient(
-                colors: [
-                    .cyan.opacity(0.24),
-                    .clear
-                ],
-                center: .topTrailing,
-                startRadius: 20,
-                endRadius: 260
-            )
+        GeometryReader { proxy in
+            Image("ArcaneArena")
+                .resizable()
+                .scaledToFill()
+                .frame(width: proxy.size.width, height: proxy.size.height)
+                .clipped()
         }
         .ignoresSafeArea()
     }
@@ -98,9 +77,9 @@ struct BattleArenaBackdropView: View {
     private var atmosphericOverlay: some View {
         LinearGradient(
             colors: [
-                .black.opacity(0.12),
-                .black.opacity(0.45),
-                .black.opacity(0.72)
+                .black.opacity(0.06),
+                .black.opacity(0.14),
+                .black.opacity(0.42)
             ],
             startPoint: .top,
             endPoint: .bottom

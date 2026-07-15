@@ -243,13 +243,6 @@ enum Element: String, Codable, CaseIterable {
 }
 
 struct AIOpponentFactory {
-    private static let names = [
-        "影牙獸", "雷鎧兵", "潮浪核獸", "熔岩角龍", "藤冠獵手", "夜幕魔偶"
-    ]
-    private static let skills = [
-        "暗影突襲", "雷磁衝鋒", "潮汐震盪", "熔火爆裂", "纏根絞擊", "月蝕干擾"
-    ]
-
     static func makeOpponent(against deck: [Monster]) -> Monster {
         let anchor = deck.max(by: { ($0.atk + $0.def + $0.hp) < ($1.atk + $1.def + $1.hp) }) ?? Monster(
             name: "預設訓練體",
@@ -267,13 +260,35 @@ struct AIOpponentFactory {
         let def = min(95, max(30, anchor.def + Int.random(in: -6...10)))
 
         return Monster(
-            name: names.randomElement() ?? "競技場守衛",
+            name: opponentName(for: chosenElement),
             element: chosenElement,
             hp: hp,
             atk: atk,
             def: def,
-            skill: skills.randomElement() ?? "混沌突擊"
+            skill: opponentSkill(for: chosenElement)
         )
+    }
+
+    private static func opponentName(for element: Element) -> String {
+        switch element {
+        case .fire: return "炎燈先鋒"
+        case .water: return "潮瓶守衛"
+        case .grass: return "苔瓶獵手"
+        case .electric: return "雷鎧兵"
+        case .dark: return "夜鈴魔偶"
+        case .normal: return "銀鈴守衛"
+        }
+    }
+
+    private static func opponentSkill(for element: Element) -> String {
+        switch element {
+        case .fire: return "熔火爆裂"
+        case .water: return "潮汐震盪"
+        case .grass: return "纏根絞擊"
+        case .electric: return "雷磁衝鋒"
+        case .dark: return "月蝕干擾"
+        case .normal: return "共鳴衝擊"
+        }
     }
 }
 

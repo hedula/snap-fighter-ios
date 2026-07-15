@@ -34,6 +34,29 @@ final class Snap_FighterUITests: XCTestCase {
     }
 
     @MainActor
+    func testLobbyQuickBattleAndDeckNavigation() throws {
+        let app = XCUIApplication()
+        app.launch()
+
+        let quickBattle = app.buttons["快速開戰, 推薦"]
+        XCTAssertTrue(quickBattle.waitForExistence(timeout: 3))
+        quickBattle.tap()
+
+        XCTAssertTrue(app.staticTexts["準備對戰！"].waitForExistence(timeout: 3))
+
+        app.terminate()
+        app.launch()
+
+        let deckButton = app.buttons.matching(
+            NSPredicate(format: "label BEGINSWITH %@", "開啟牌組")
+        ).firstMatch
+        XCTAssertTrue(deckButton.waitForExistence(timeout: 3))
+        deckButton.tap()
+
+        XCTAssertTrue(app.navigationBars["戰鬥編成"].waitForExistence(timeout: 3))
+    }
+
+    @MainActor
     func testLaunchPerformance() throws {
         // This measures how long it takes to launch your application.
         measure(metrics: [XCTApplicationLaunchMetric()]) {
