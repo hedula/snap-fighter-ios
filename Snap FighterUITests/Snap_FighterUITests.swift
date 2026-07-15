@@ -57,6 +57,59 @@ final class Snap_FighterUITests: XCTestCase {
     }
 
     @MainActor
+    func testSummonAndBattleResultActions() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--show-capture-result"]
+        app.launch()
+
+        XCTAssertTrue(app.staticTexts["召喚成功"].waitForExistence(timeout: 3))
+        let cutoutChoice = app.buttons["主體卡圖，未選擇"]
+        XCTAssertTrue(cutoutChoice.waitForExistence(timeout: 3))
+        cutoutChoice.tap()
+        XCTAssertTrue(app.buttons["主體卡圖，已選擇"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.buttons["召喚第二張卡"].exists)
+
+        app.terminate()
+        app.launchArguments = ["--show-battle-result"]
+        app.launch()
+
+        XCTAssertTrue(app.staticTexts["勝者誕生"].waitForExistence(timeout: 3))
+        let collectButton = app.buttons["收入卡牌收藏"]
+        XCTAssertTrue(collectButton.waitForExistence(timeout: 3))
+        collectButton.tap()
+        XCTAssertTrue(app.buttons["已收藏這張卡"].waitForExistence(timeout: 2))
+
+        app.buttons["返回冒險大廳"].tap()
+        XCTAssertTrue(app.staticTexts["冒險大廳"].waitForExistence(timeout: 3))
+    }
+
+    @MainActor
+    func testKeyOutAndBattleAssemblyFlow() throws {
+        let app = XCUIApplication()
+        app.launchArguments = ["--show-manual-cutout"]
+        app.launch()
+
+        XCTAssertTrue(app.staticTexts["手動選取主體"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.buttons["稍後處理"].waitForExistence(timeout: 3))
+        app.buttons["稍後處理"].tap()
+        XCTAssertTrue(app.staticTexts["正在召喚怪物"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.buttons["manual-cutout-button"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.buttons["重新嘗試"].waitForExistence(timeout: 12))
+        app.buttons["取消召喚"].tap()
+        XCTAssertTrue(app.staticTexts["冒險大廳"].waitForExistence(timeout: 3))
+
+        app.terminate()
+        app.launchArguments = ["--show-ready-battle"]
+        app.launch()
+
+        XCTAssertTrue(app.staticTexts["決鬥編成"].waitForExistence(timeout: 3))
+        let battleButton = app.buttons["進入魔法競技場"]
+        XCTAssertTrue(battleButton.waitForExistence(timeout: 3))
+        battleButton.tap()
+        XCTAssertTrue(app.staticTexts["你的回合"].waitForExistence(timeout: 3))
+    }
+
+    @MainActor
     func testLaunchPerformance() throws {
         // This measures how long it takes to launch your application.
         measure(metrics: [XCTApplicationLaunchMetric()]) {

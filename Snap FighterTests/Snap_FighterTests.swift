@@ -67,6 +67,95 @@ struct Snap_FighterTests {
         #expect(viewModel.isLoading == false)
     }
 
+    @Test func captureMonsterPublishesKeyOutProgress() async throws {
+        let sourceImage = makeImage(color: .red, size: CGSize(width: 40, height: 40))
+        let cutoutImage = makeImage(color: .green, size: CGSize(width: 20, height: 20))
+        let monster = Monster(
+            name: "輪廓獸",
+            element: .grass,
+            hp: 70,
+            atk: 52,
+            def: 44,
+            skill: "透明突擊",
+            capturedImage: sourceImage,
+            cardImage: cutoutImage,
+            preferredArtwork: .cutout
+        )
+        let viewModel = GameViewModel(progressiveAnalyzeMonster: { image, onProgress in
+            onProgress(.init(phase: .detectingSubject, sourceImage: image, cutoutImage: nil))
+            onProgress(.init(phase: .generatingCard, sourceImage: image, cutoutImage: cutoutImage))
+            return AnalysisResult(monster: monster, diagnostics: nil)
+        })
+
+        await viewModel.captureMonster(from: sourceImage)
+
+        #expect(viewModel.analysisProgress?.phase == .generatingCard)
+        #expect(viewModel.analysisProgress?.cutoutImage?.pngData() == cutoutImage.pngData())
+        if case .showCard = viewModel.state {
+        } else {
+            Issue.record("Expected showCard state after progressive analysis")
+        }
+    }
+
+    @Test func cancellingAnalysisIgnoresLateResult() async throws {
+        let sourceImage = makeImage(color: .orange, size: CGSize(width: 40, height: 40))
+        let monster = Monster(name: "遲到獸", element: .fire, hp: 60, atk: 50, def: 40, skill: "延遲衝擊")
+        let viewModel = GameViewModel(progressiveAnalyzeMonster: { _, _ in
+            try await Task.sleep(nanoseconds: 100_000_000)
+            return AnalysisResult(monster: monster, diagnostics: nil)
+        })
+
+        let captureTask = Task { @MainActor in
+            await viewModel.captureMonster(from: sourceImage)
+        }
+        await Task.yield()
+        viewModel.cancelAnalysis()
+        await captureTask.value
+
+        #expect(viewModel.monsters.isEmpty)
+        #expect(viewModel.isLoading == false)
+        #expect(viewModel.analysisProgress?.phase == nil)
+        if case .idle = viewModel.state {
+        } else {
+            Issue.record("Expected idle state after cancelling analysis")
+        }
+    }
+
+    @Test func manualCutoutSurvivesLateAnalysisResult() async throws {
+        let sourceImage = makeImage(color: .orange, size: CGSize(width: 40, height: 40))
+        let cutoutImage = makeImage(color: .cyan, size: CGSize(width: 20, height: 20))
+        let monster = Monster(
+            name: "手動輪廓獸",
+            element: .water,
+            hp: 72,
+            atk: 50,
+            def: 48,
+            skill: "透明浪擊",
+            capturedImage: sourceImage
+        )
+        let viewModel = GameViewModel(progressiveAnalyzeMonster: { image, onProgress in
+            onProgress(.init(phase: .generatingCard, sourceImage: image, cutoutImage: nil))
+            try await Task.sleep(nanoseconds: 100_000_000)
+            return AnalysisResult(monster: monster, diagnostics: nil)
+        })
+
+        let captureTask = Task { @MainActor in
+            await viewModel.captureMonster(from: sourceImage)
+        }
+        try await Task.sleep(nanoseconds: 20_000_000)
+        viewModel.applyManualCutout(cutoutImage)
+        await captureTask.value
+
+        #expect(viewModel.monsters.last?.cardImage?.pngData() == cutoutImage.pngData())
+        #expect(viewModel.monsters.last?.preferredArtwork == .cutout)
+        #expect(viewModel.analysisProgress?.cutoutImage?.pngData() == cutoutImage.pngData())
+        if case .showCard(let resolvedMonster) = viewModel.state {
+            #expect(resolvedMonster.cardImage?.pngData() == cutoutImage.pngData())
+        } else {
+            Issue.record("Expected showCard state with the manual cutout")
+        }
+    }
+
     @Test func resetMonstersClearsBattleProgress() {
         let monster = Monster(from: .init(name: "雷貓", element: "電", hp: 60, atk: 58, def: 30, skill: "電光衝刺"))
         let viewModel = GameViewModel { _ in

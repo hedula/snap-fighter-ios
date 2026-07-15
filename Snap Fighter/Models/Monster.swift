@@ -183,6 +183,25 @@ struct Monster: Identifiable {
             currentHp: currentHp
         )
     }
+
+    func replacingCardImage(_ image: UIImage) -> Monster {
+        Monster(
+            id: id,
+            name: name,
+            element: element,
+            hp: hp,
+            atk: atk,
+            def: def,
+            skill: skill,
+            skillType: skillType,
+            capturedImage: capturedImage,
+            cardImage: image,
+            preferredArtwork: .cutout,
+            level: level,
+            experience: experience,
+            currentHp: currentHp
+        )
+    }
 }
 
 enum Element: String, Codable, CaseIterable {

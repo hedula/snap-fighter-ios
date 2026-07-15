@@ -11,6 +11,55 @@ struct AnalysisResult {
     let diagnostics: AIDiagnostics?
 }
 
+enum MonsterAnalysisPhase: Int, CaseIterable, Equatable {
+    case preparing
+    case detectingSubject
+    case removingBackground
+    case generatingCard
+
+    var title: String {
+        switch self {
+        case .preparing: return "校準召喚影像"
+        case .detectingSubject: return "鎖定物件輪廓"
+        case .removingBackground: return "移除影像背景"
+        case .generatingCard: return "生成戰鬥卡牌"
+        }
+    }
+
+    var detail: String {
+        switch self {
+        case .preparing: return "正在調整尺寸與方向"
+        case .detectingSubject: return "Vision 正在辨識前景物件"
+        case .removingBackground: return "建立透明遮罩並保留主體"
+        case .generatingCard: return "同步怪物資料與卡面內容"
+        }
+    }
+
+    var progress: Double {
+        switch self {
+        case .preparing: return 0.12
+        case .detectingSubject: return 0.34
+        case .removingBackground: return 0.62
+        case .generatingCard: return 0.86
+        }
+    }
+
+    var systemImage: String {
+        switch self {
+        case .preparing: return "camera.filters"
+        case .detectingSubject: return "viewfinder"
+        case .removingBackground: return "person.crop.rectangle"
+        case .generatingCard: return "rectangle.stack.badge.plus"
+        }
+    }
+}
+
+struct MonsterAnalysisProgress {
+    let phase: MonsterAnalysisPhase
+    let sourceImage: UIImage
+    let cutoutImage: UIImage?
+}
+
 @MainActor
 final class AIService {
     static let shared = AIService()
@@ -18,6 +67,7 @@ final class AIService {
     static let uploadCompressionQuality: CGFloat = 0.72
 
     typealias ForegroundIsolator = (UIImage) async -> UIImage?
+    typealias ProgressHandler = @MainActor (MonsterAnalysisProgress) -> Void
 
     private let isolateForeground: ForegroundIsolator
 
@@ -30,6 +80,15 @@ final class AIService {
     }
 
     func analyze(image: UIImage) async throws -> AnalysisResult {
+        try await analyze(image: image, onProgress: { _ in })
+    }
+
+    func analyze(
+        image: UIImage,
+        onProgress: @escaping ProgressHandler
+    ) async throws -> AnalysisResult {
+        onProgress(.init(phase: .preparing, sourceImage: image, cutoutImage: nil))
+
         guard let imageData = Self.makeUploadImageData(from: image) else {
             throw AIError.imageConversionFailed
         }
@@ -44,10 +103,27 @@ final class AIService {
 
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
+        request.timeoutInterval = 30
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONSerialization.data(withJSONObject: payload)
+        let networkRequest = request
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        onProgress(.init(phase: .detectingSubject, sourceImage: image, cutoutImage: nil))
+        async let foregroundImage = isolateForeground(image)
+        async let networkResponse = URLSession.shared.data(for: networkRequest)
+
+        await Task.yield()
+        onProgress(.init(phase: .removingBackground, sourceImage: image, cutoutImage: nil))
+        let cardImage = await foregroundImage
+        onProgress(.init(phase: .generatingCard, sourceImage: image, cutoutImage: cardImage))
+
+        let data: Data
+        let response: URLResponse
+        do {
+            (data, response) = try await networkResponse
+        } catch let error as URLError where error.code == .timedOut {
+            throw AIError.analysisTimedOut
+        }
         guard let httpResponse = response as? HTTPURLResponse else {
             throw AIError.invalidResponse
         }
@@ -60,7 +136,6 @@ final class AIService {
         do {
             let monsterResponse = try JSONDecoder().decode(MonsterResponse.self, from: data)
             let diagnostics = Self.extractDiagnostics(from: httpResponse)
-            let cardImage = await isolateForeground(image)
             return AnalysisResult(
                 monster: Monster(from: monsterResponse, capturedImage: image, cardImage: cardImage),
                 diagnostics: diagnostics
@@ -120,6 +195,7 @@ enum AIError: LocalizedError {
     case imageConversionFailed
     case invalidEndpoint
     case invalidResponse
+    case analysisTimedOut
     case apiError(String)
     case decodingFailed(String)
 
@@ -128,6 +204,7 @@ enum AIError: LocalizedError {
         case .imageConversionFailed: return "圖片處理失敗"
         case .invalidEndpoint:       return "Worker API 位址設定錯誤"
         case .invalidResponse:       return "Worker 回傳格式錯誤"
+        case .analysisTimedOut:      return "怪物卡牌生成逾時，請檢查網路後再試一次"
         case .apiError(let message): return "API 錯誤：\(message)"
         case .decodingFailed(let s): return "解析失敗：\(s)"
         }

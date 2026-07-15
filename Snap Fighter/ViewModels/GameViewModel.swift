@@ -4,6 +4,10 @@ import Combine
 @MainActor
 class GameViewModel: ObservableObject {
     typealias MonsterAnalyzer = (UIImage) async throws -> AnalysisResult
+    typealias ProgressiveMonsterAnalyzer = (
+        UIImage,
+        @escaping AIService.ProgressHandler
+    ) async throws -> AnalysisResult
     typealias AIOpponentGenerator = ([Monster]) -> Monster
     typealias StarterDeckFactory = () -> [Monster]
     private enum BattleContext {
@@ -34,23 +38,27 @@ class GameViewModel: ObservableObject {
     @Published var errorMessage: String? = nil
     @Published var diagnostics: AIDiagnostics? = nil
     @Published var isLoading = false
+    @Published var analysisProgress: MonsterAnalysisProgress? = nil
+    @Published private(set) var lastCaptureImage: UIImage? = nil
     @Published private(set) var battleReward: BattleReward? = nil
     @Published private(set) var reserveMonster: Monster? = nil
-    private let analyzeMonster: MonsterAnalyzer
+    private let analyzeMonster: ProgressiveMonsterAnalyzer
     private let generateAIOpponent: AIOpponentGenerator
     private let makeStarterDeck: StarterDeckFactory
     private var battleContext: BattleContext = .none
     private var deckBattleParticipantIDs: Set<Monster.ID> = []
     private let playerVictoryExperience = 40
+    private var activeCaptureAttemptID = UUID()
+    private var manualCutoutImage: UIImage? = nil
 
     init(
-        analyzeMonster: @escaping MonsterAnalyzer = { image in
-            try await AIService.shared.analyze(image: image)
+        progressiveAnalyzeMonster: @escaping ProgressiveMonsterAnalyzer = { image, onProgress in
+            try await AIService.shared.analyze(image: image, onProgress: onProgress)
         },
         generateAIOpponent: AIOpponentGenerator? = nil,
         makeStarterDeck: StarterDeckFactory? = nil
     ) {
-        self.analyzeMonster = analyzeMonster
+        self.analyzeMonster = progressiveAnalyzeMonster
         self.generateAIOpponent = generateAIOpponent ?? { deck in
             AIOpponentFactory.makeOpponent(against: deck)
         }
@@ -76,23 +84,93 @@ class GameViewModel: ObservableObject {
         }
     }
 
+    convenience init(
+        analyzeMonster: @escaping MonsterAnalyzer,
+        generateAIOpponent: AIOpponentGenerator? = nil,
+        makeStarterDeck: StarterDeckFactory? = nil
+    ) {
+        self.init(
+            progressiveAnalyzeMonster: { image, _ in
+                try await analyzeMonster(image)
+            },
+            generateAIOpponent: generateAIOpponent,
+            makeStarterDeck: makeStarterDeck
+        )
+    }
+
     func captureMonster(from image: UIImage) async {
+        let attemptID = UUID()
+        activeCaptureAttemptID = attemptID
+        lastCaptureImage = image
+        manualCutoutImage = nil
         isLoading = true
+        errorMessage = nil
         battleReward = nil
+        analysisProgress = .init(phase: .preparing, sourceImage: image, cutoutImage: nil)
         state = .analyzing
         do {
-            let result = try await analyzeMonster(image)
+            let result = try await analyzeMonster(image) { [weak self] progress in
+                guard let self, self.activeCaptureAttemptID == attemptID else { return }
+                self.analysisProgress = .init(
+                    phase: progress.phase,
+                    sourceImage: progress.sourceImage,
+                    cutoutImage: progress.cutoutImage ?? self.manualCutoutImage
+                )
+            }
+            guard activeCaptureAttemptID == attemptID else { return }
             diagnostics = result.diagnostics
-            monsters.append(result.monster)
+            let resolvedMonster = manualCutoutImage.map { result.monster.replacingCardImage($0) } ?? result.monster
+            monsters.append(resolvedMonster)
             battleContext = .captured
             reserveMonster = nil
             deckBattleParticipantIDs = []
-            state = monsters.count >= 2 ? .readyToBattle : .showCard(result.monster)
+            state = monsters.count >= 2 ? .readyToBattle : .showCard(resolvedMonster)
         } catch {
+            guard activeCaptureAttemptID == attemptID else { return }
             errorMessage = error.localizedDescription
             state = .idle
         }
+        if activeCaptureAttemptID == attemptID {
+            isLoading = false
+        }
+    }
+
+    func retryLastCapture() async {
+        guard let lastCaptureImage else { return }
+        await captureMonster(from: lastCaptureImage)
+    }
+
+    func cancelAnalysis() {
+        activeCaptureAttemptID = UUID()
+        analysisProgress = nil
+        lastCaptureImage = nil
         isLoading = false
+        state = .idle
+    }
+
+    func applyManualCutout(_ image: UIImage) {
+        manualCutoutImage = image
+
+        if let progress = analysisProgress {
+            analysisProgress = .init(
+                phase: progress.phase,
+                sourceImage: progress.sourceImage,
+                cutoutImage: image
+            )
+        }
+
+        guard let lastIndex = monsters.indices.last else { return }
+        let updatedMonster = monsters[lastIndex].replacingCardImage(image)
+        monsters[lastIndex] = updatedMonster
+
+        switch state {
+        case .showCard(let monster) where monster.id == updatedMonster.id:
+            state = .showCard(updatedMonster)
+        case .readyToBattle:
+            break
+        default:
+            break
+        }
     }
 
     func startBattle() {
@@ -103,6 +181,9 @@ class GameViewModel: ObservableObject {
         guard monsters.count == 2 else { return }
         self.monsters = monsters.map { $0.resetForBattle() }
         diagnostics = nil
+        analysisProgress = nil
+        lastCaptureImage = nil
+        manualCutoutImage = nil
         battleReward = nil
         reserveMonster = nil
         battleContext = .captured
@@ -117,6 +198,7 @@ class GameViewModel: ObservableObject {
         monsters = [player, opponent]
         reserveMonster = deck.count > 1 ? deck[1].resetForBattle() : nil
         diagnostics = nil
+        analysisProgress = nil
         battleReward = nil
         battleContext = .deckVersusAI
         deckBattleParticipantIDs = Set([player.id, reserveMonster?.id].compactMap { $0 })
@@ -132,6 +214,7 @@ class GameViewModel: ObservableObject {
         monsters = [player, opponent]
         reserveMonster = starterDeck.count > 1 ? starterDeck[1].resetForBattle() : nil
         diagnostics = nil
+        analysisProgress = nil
         battleReward = nil
         battleContext = .starterTrial
         deckBattleParticipantIDs = []
@@ -186,6 +269,8 @@ class GameViewModel: ObservableObject {
     func resetMonsters() {
         monsters = []
         diagnostics = nil
+        analysisProgress = nil
+        lastCaptureImage = nil
         battleReward = nil
         reserveMonster = nil
         battleContext = .none
