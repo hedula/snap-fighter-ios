@@ -1,5 +1,9 @@
 import UIKit
 import Foundation
+import Vision
+#if canImport(FoundationModels)
+import FoundationModels
+#endif
 
 struct AIDiagnostics: Equatable {
     let provider: String
@@ -60,6 +64,13 @@ struct MonsterAnalysisProgress {
     let cutoutImage: UIImage?
 }
 
+typealias MonsterAnalysisProgressHandler = @MainActor (MonsterAnalysisProgress) -> Void
+
+@MainActor
+protocol MonsterAnalyzing {
+    func analyze(image: UIImage, onProgress: @escaping MonsterAnalysisProgressHandler) async throws -> AnalysisResult
+}
+
 @MainActor
 final class AIService {
     static let shared = AIService()
@@ -67,15 +78,18 @@ final class AIService {
     static let uploadCompressionQuality: CGFloat = 0.72
 
     typealias ForegroundIsolator = (UIImage) async -> UIImage?
-    typealias ProgressHandler = @MainActor (MonsterAnalysisProgress) -> Void
+    typealias ProgressHandler = MonsterAnalysisProgressHandler
 
     private let isolateForeground: ForegroundIsolator
+    private let providerMode: AIProvider
 
     init(
+        providerMode: AIProvider? = nil,
         isolateForeground: @escaping ForegroundIsolator = { image in
             await ForegroundIsolationService.shared.isolateSubject(from: image)
         }
     ) {
+        self.providerMode = providerMode ?? Config.aiProvider
         self.isolateForeground = isolateForeground
     }
 
@@ -86,6 +100,83 @@ final class AIService {
     func analyze(
         image: UIImage,
         onProgress: @escaping ProgressHandler
+    ) async throws -> AnalysisResult {
+        switch providerMode {
+        case .auto:
+            if AppleLocalMonsterAnalyzer.isAvailable {
+                do {
+                    return try await AppleLocalMonsterAnalyzer(isolateForeground: isolateForeground)
+                        .analyze(image: image, onProgress: onProgress)
+                } catch AIError.localModelUnavailable(_) {
+                    return try await WorkerMonsterAnalyzer(isolateForeground: isolateForeground)
+                        .analyze(image: image, onProgress: onProgress)
+                }
+            }
+
+            return try await WorkerMonsterAnalyzer(isolateForeground: isolateForeground)
+                .analyze(image: image, onProgress: onProgress)
+        case .appleLocal:
+            return try await AppleLocalMonsterAnalyzer(isolateForeground: isolateForeground)
+                .analyze(image: image, onProgress: onProgress)
+        case .worker:
+            return try await WorkerMonsterAnalyzer(isolateForeground: isolateForeground)
+                .analyze(image: image, onProgress: onProgress)
+        case .mock:
+            return try await MockMonsterAnalyzer(isolateForeground: isolateForeground)
+                .analyze(image: image, onProgress: onProgress)
+        }
+    }
+
+    func analyzeMock(image: UIImage) async -> AnalysisResult {
+        (try? await MockMonsterAnalyzer(isolateForeground: isolateForeground).analyze(image: image, onProgress: { _ in })) ?? AnalysisResult(
+            monster: Monster(
+                name: "熔核馬克杯魔將",
+                element: .fire,
+                hp: 75,
+                atk: 60,
+                def: 35,
+                skill: "沸騰杯焰衝擊",
+                skillType: .powerStrike,
+                capturedImage: image
+            ),
+            diagnostics: AIDiagnostics(provider: "mock", model: "local-preview")
+        )
+    }
+
+    fileprivate static func extractErrorMessage(from data: Data) -> String? {
+        guard
+            let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+            let message = json["error"] as? String
+        else {
+            return nil
+        }
+        return message
+    }
+
+    static func makeUploadImageData(from image: UIImage) -> Data? {
+        let preparedImage = image.resizedForUpload(maxPixelSize: uploadMaxPixelSize)
+        return preparedImage.jpegData(compressionQuality: uploadCompressionQuality)
+    }
+
+    fileprivate static func extractDiagnostics(from response: HTTPURLResponse) -> AIDiagnostics? {
+        guard
+            let provider = response.value(forHTTPHeaderField: "X-AI-Provider"),
+            let model = response.value(forHTTPHeaderField: "X-AI-Model")
+        else {
+            return nil
+        }
+
+        return AIDiagnostics(provider: provider, model: model)
+    }
+}
+
+@MainActor
+private struct WorkerMonsterAnalyzer: MonsterAnalyzing {
+    let isolateForeground: AIService.ForegroundIsolator
+
+    func analyze(
+        image: UIImage,
+        onProgress: @escaping MonsterAnalysisProgressHandler
     ) async throws -> AnalysisResult {
         onProgress(.init(phase: .preparing, sourceImage: image, cutoutImage: nil))
 
@@ -146,23 +237,33 @@ final class AIService {
         }
     }
 
+    private static func makeUploadImageData(from image: UIImage) -> Data? {
+        AIService.makeUploadImageData(from: image)
+    }
+
     private static func extractErrorMessage(from data: Data) -> String? {
-        guard
-            let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-            let message = json["error"] as? String
-        else {
-            return nil
-        }
-        return message
+        AIService.extractErrorMessage(from: data)
     }
 
-    static func makeUploadImageData(from image: UIImage) -> Data? {
-        let preparedImage = image.resizedForUpload(maxPixelSize: uploadMaxPixelSize)
-        return preparedImage.jpegData(compressionQuality: uploadCompressionQuality)
+    private static func extractDiagnostics(from response: HTTPURLResponse) -> AIDiagnostics? {
+        AIService.extractDiagnostics(from: response)
     }
+}
 
-    func analyzeMock(image: UIImage) async -> AnalysisResult {
+@MainActor
+private struct MockMonsterAnalyzer: MonsterAnalyzing {
+    let isolateForeground: AIService.ForegroundIsolator
+
+    func analyze(
+        image: UIImage,
+        onProgress: @escaping MonsterAnalysisProgressHandler
+    ) async throws -> AnalysisResult {
+        onProgress(.init(phase: .preparing, sourceImage: image, cutoutImage: nil))
         try? await Task.sleep(nanoseconds: 1_500_000_000)
+        onProgress(.init(phase: .detectingSubject, sourceImage: image, cutoutImage: nil))
+        let cardImage = await isolateForeground(image)
+        onProgress(.init(phase: .generatingCard, sourceImage: image, cutoutImage: cardImage))
+
         let response = MonsterResponse(
             name: "熔核馬克杯魔將",
             element: "火",
@@ -172,30 +273,140 @@ final class AIService {
             skill: "沸騰杯焰衝擊",
             skillType: BattleSkillType.powerStrike.rawValue
         )
-        let cardImage = await isolateForeground(image)
+
         return AnalysisResult(
             monster: Monster(from: response, capturedImage: image, cardImage: cardImage),
             diagnostics: AIDiagnostics(provider: "mock", model: "local-preview")
         )
     }
+}
 
-    private static func extractDiagnostics(from response: HTTPURLResponse) -> AIDiagnostics? {
-        guard
-            let provider = response.value(forHTTPHeaderField: "X-AI-Provider"),
-            let model = response.value(forHTTPHeaderField: "X-AI-Model")
-        else {
-            return nil
+@MainActor
+private struct AppleLocalMonsterAnalyzer: MonsterAnalyzing {
+    let isolateForeground: AIService.ForegroundIsolator
+
+    static var isAvailable: Bool {
+        #if canImport(FoundationModels)
+        if #available(iOS 26.0, *) {
+            return AppleFoundationModelsMonsterGenerator.isAvailable
+        }
+        #endif
+        return false
+    }
+
+    func analyze(
+        image: UIImage,
+        onProgress: @escaping MonsterAnalysisProgressHandler
+    ) async throws -> AnalysisResult {
+        guard Self.isAvailable else {
+            throw AIError.localModelUnavailable("Apple Foundation Models is not available on this device.")
         }
 
-        return AIDiagnostics(provider: provider, model: model)
+        onProgress(.init(phase: .preparing, sourceImage: image, cutoutImage: nil))
+        async let labels = Self.classifyImage(image)
+        async let cardImage = isolateForeground(image)
+
+        onProgress(.init(phase: .detectingSubject, sourceImage: image, cutoutImage: nil))
+        let imageLabels = await labels
+        onProgress(.init(phase: .removingBackground, sourceImage: image, cutoutImage: nil))
+        let resolvedCardImage = await cardImage
+        onProgress(.init(phase: .generatingCard, sourceImage: image, cutoutImage: resolvedCardImage))
+
+        #if canImport(FoundationModels)
+        if #available(iOS 26.0, *) {
+            let response = try await AppleFoundationModelsMonsterGenerator.generateMonster(
+                imageLabels: imageLabels
+            )
+            return AnalysisResult(
+                monster: Monster(from: response, capturedImage: image, cardImage: resolvedCardImage),
+                diagnostics: AIDiagnostics(provider: "apple-local", model: "FoundationModels+Vision")
+            )
+        }
+        #endif
+
+        throw AIError.localModelUnavailable("Apple Foundation Models is not available in this build.")
+    }
+
+    private static func classifyImage(_ image: UIImage) async -> [String] {
+        guard let cgImage = image.cgImage else { return [] }
+
+        let request = VNClassifyImageRequest()
+        let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+        do {
+            try handler.perform([request])
+            return (request.results ?? [])
+                .filter { $0.confidence >= 0.08 }
+                .prefix(5)
+                .map(\.identifier)
+        } catch {
+            return []
+        }
     }
 }
+
+#if canImport(FoundationModels)
+@available(iOS 26.0, *)
+private enum AppleFoundationModelsMonsterGenerator {
+    static var isAvailable: Bool {
+        if case .available = SystemLanguageModel.default.availability {
+            return true
+        }
+        return false
+    }
+
+    static func generateMonster(imageLabels: [String]) async throws -> MonsterResponse {
+        let model = SystemLanguageModel.default
+        guard case .available = model.availability else {
+            throw AIError.localModelUnavailable(String(describing: model.availability))
+        }
+
+        let instructions = [
+            "你是一個中二奇幻怪物卡牌命名師。",
+            "依照圖片辨識線索，產生一張戰鬥怪物卡。",
+            "name 必須是 4 到 8 字中文，保留物件線索並帶有 JRPG 戰鬥感。",
+            "element 只能是：火、水、草、電、暗、一般。",
+            "skillType 只能是：powerStrike、fortify、siphonStrike。",
+            "你必須只輸出 JSON，且不得輸出 markdown 或額外說明。",
+            "JSON schema:",
+            "{\"name\":\"4~8字中文\",\"element\":\"火|水|草|電|暗|一般\",\"hp\":50~100,\"atk\":30~80,\"def\":20~60,\"skill\":\"8~16字中文\",\"skillType\":\"powerStrike|fortify|siphonStrike\"}"
+        ].joined(separator: "\n")
+        let prompt = [
+            "圖片線索：\(imageLabels.isEmpty ? "未知物件" : imageLabels.joined(separator: ", "))",
+            "請生成怪物名稱、屬性、能力值與招式，並只回傳 JSON。"
+        ].joined(separator: "\n")
+
+        let session = LanguageModelSession(model: model, instructions: instructions)
+        let response = try await session.respond(to: prompt)
+        return try parseMonsterResponse(from: response.content)
+    }
+
+    private static func parseMonsterResponse(from text: String) throws -> MonsterResponse {
+        let cleaned = text
+            .replacingOccurrences(of: "```json", with: "", options: .caseInsensitive)
+            .replacingOccurrences(of: "```", with: "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        let decoded = try JSONDecoder().decode(MonsterResponse.self, from: Data(cleaned.utf8))
+        return MonsterResponse(
+            name: String(decoded.name.prefix(8)),
+            element: Element(rawValue: decoded.element)?.rawValue ?? Element.normal.rawValue,
+            hp: min(100, max(50, decoded.hp)),
+            atk: min(80, max(30, decoded.atk)),
+            def: min(60, max(20, decoded.def)),
+            skill: decoded.skill.isEmpty ? "靈光衝擊" : String(decoded.skill.prefix(16)),
+            skillType: BattleSkillType(rawValue: decoded.skillType ?? "")?.rawValue
+                ?? BattleSkillType(apiValue: nil, skillName: decoded.skill).rawValue
+        )
+    }
+}
+#endif
 
 enum AIError: LocalizedError {
     case imageConversionFailed
     case invalidEndpoint
     case invalidResponse
     case analysisTimedOut
+    case localModelUnavailable(String)
     case apiError(String)
     case decodingFailed(String)
 
@@ -205,6 +416,7 @@ enum AIError: LocalizedError {
         case .invalidEndpoint:       return "Worker API 位址設定錯誤"
         case .invalidResponse:       return "Worker 回傳格式錯誤"
         case .analysisTimedOut:      return "怪物卡牌生成逾時，請檢查網路後再試一次"
+        case .localModelUnavailable(let reason): return "本機 AI 不可用：\(reason)"
         case .apiError(let message): return "API 錯誤：\(message)"
         case .decodingFailed(let s): return "解析失敗：\(s)"
         }

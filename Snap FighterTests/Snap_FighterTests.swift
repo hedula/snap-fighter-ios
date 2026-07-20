@@ -667,6 +667,49 @@ struct Snap_FighterTests {
         #expect(result.monster.cardImage == nil)
     }
 
+    @Test func aiServiceMockProviderUsesLocalPreview() async throws {
+        let sourceImage = makeImage(color: .orange, size: CGSize(width: 32, height: 32))
+        let cutoutImage = makeImage(color: .green, size: CGSize(width: 16, height: 16))
+        let service = AIService(providerMode: .mock, isolateForeground: { _ in cutoutImage })
+
+        let result = try await service.analyze(image: sourceImage)
+
+        #expect(result.diagnostics == AIDiagnostics(provider: "mock", model: "local-preview"))
+        #expect(result.monster.cardImage?.pngData() == cutoutImage.pngData())
+    }
+
+    @Test func aiProviderParsesBuildSettingValues() {
+        #expect(AIProvider(rawValue: "auto") == .auto)
+        #expect(AIProvider(rawValue: "apple-local") == .appleLocal)
+        #expect(AIProvider(rawValue: "worker") == .worker)
+        #expect(AIProvider(rawValue: "mock") == .mock)
+        #expect(AIProvider.appleLocal.displayName == "Apple Local")
+    }
+
+    @Test func aiProviderLaunchArgumentOverridesInfoPlistValue() {
+        let equalsStyle = Config.resolveAIProvider(
+            arguments: ["Snap Fighter", "--ai-provider=mock"],
+            infoValue: "worker"
+        )
+        let separatedStyle = Config.resolveAIProvider(
+            arguments: ["Snap Fighter", "--ai-provider", "apple-local"],
+            infoValue: "worker"
+        )
+        let infoPlistFallback = Config.resolveAIProvider(
+            arguments: ["Snap Fighter"],
+            infoValue: "worker"
+        )
+        let defaultFallback = Config.resolveAIProvider(
+            arguments: ["Snap Fighter"],
+            infoValue: nil
+        )
+
+        #expect(equalsStyle == AIProviderSelection(provider: .mock, source: "Launch Argument"))
+        #expect(separatedStyle == AIProviderSelection(provider: .appleLocal, source: "Launch Argument"))
+        #expect(infoPlistFallback == AIProviderSelection(provider: .worker, source: "Info.plist"))
+        #expect(defaultFallback == AIProviderSelection(provider: .auto, source: "Default"))
+    }
+
     @Test func battleSessionAttackHandsTurnToOpponent() {
         var session = BattleSession(
             player: Monster(name: "玩家貓", element: .fire, hp: 70, atk: 50, def: 20, skill: "火抓"),

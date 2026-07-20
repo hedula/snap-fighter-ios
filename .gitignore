@@ -3,6 +3,7 @@
 xcuserdata/
 *.xcbkptlist
 DerivedData/
+.derivedData/
 .build/
 
 # Cloudflare Worker local env

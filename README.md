@@ -54,6 +54,24 @@ cd snap-fighter-ios
 
 app 會從 Info.plist build setting `WORKER_ANALYZE_ENDPOINT` 讀取 API 位址；目前專案已設定預設值。
 
+app 也會從 Info.plist build setting `AI_PROVIDER` 決定分析模式：
+
+- `auto`: 預設值。若 Apple Foundation Models 可用，優先使用本機模型；否則使用 Worker。
+- `apple-local`: 強制使用 Apple Foundation Models + Vision。需要支援 Apple Intelligence 的裝置與系統版本。
+- `worker`: 強制使用 Cloudflare Worker。
+- `mock`: 使用本機假資料，適合教學排除網路問題。
+
+Debug build 可加入 launch argument `--show-ai-debug-overlay`，畫面右上角會顯示目前 `AI_PROVIDER` 模式，以及分析完成後實際使用的 provider/model。
+
+教學或測試時，也可以用 launch argument 暫時覆蓋 provider，不需要改 Build Settings：
+
+```text
+--ai-provider=mock
+--ai-provider=worker
+--ai-provider=apple-local
+--ai-provider=auto
+```
+
 如果你要改成自己的 Worker：
 
 1. 先部署 [worker](/Users/hedula/Workspace/snap_fighter_demo/Snap%20Fighter/worker)

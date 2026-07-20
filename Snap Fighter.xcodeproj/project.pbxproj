@@ -400,6 +400,7 @@
 				DEVELOPMENT_TEAM = Q9MF7PJE22;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_AI_PROVIDER = auto;
 				INFOPLIST_KEY_CFBundleDisplayName = "攝靈者卡牌";
 				INFOPLIST_KEY_NSCameraUsageDescription = "拍攝物體以生成戰鬥角色";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "同步目前位置，將附近地景轉成戰鬥背景";
@@ -438,6 +439,7 @@
 				DEVELOPMENT_TEAM = Q9MF7PJE22;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_AI_PROVIDER = auto;
 				INFOPLIST_KEY_CFBundleDisplayName = "攝靈者卡牌";
 				INFOPLIST_KEY_NSCameraUsageDescription = "拍攝物體以生成戰鬥角色";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "同步目前位置，將附近地景轉成戰鬥背景";

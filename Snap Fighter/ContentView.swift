@@ -378,7 +378,9 @@ struct ContentView: View {
     @ViewBuilder
     private var diagnosticsOverlay: some View {
         #if DEBUG
-        if isAIDebugOverlayEnabled, let diagnostics = vm.diagnostics {
+        if isAIDebugOverlayEnabled {
+            let providerSelection = Config.aiProviderSelection
+
             VStack {
                 HStack {
                     Spacer()
@@ -386,13 +388,25 @@ struct ContentView: View {
                         Text("AI Debug")
                             .font(.caption)
                             .bold()
-                        Text(diagnostics.provider)
+                        Text("Mode: \(providerSelection.provider.displayName)")
                             .font(.caption2)
                             .foregroundColor(.secondary)
-                        Text(diagnostics.model)
+                        Text("Source: \(providerSelection.source)")
                             .font(.caption2)
                             .foregroundColor(.secondary)
-                            .lineLimit(2)
+                        if let diagnostics = vm.diagnostics {
+                            Text("Provider: \(diagnostics.provider)")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                            Text("Model: \(diagnostics.model)")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                                .lineLimit(2)
+                        } else {
+                            Text("Provider: pending")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                        }
                     }
                     .padding(10)
                     .background(.ultraThinMaterial)
