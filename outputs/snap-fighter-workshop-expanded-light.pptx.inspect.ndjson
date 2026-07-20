@@ -1,0 +1,347 @@
+{"kind":"deck","id":"pr/g0y3jv","name":"Deck"}
+{"kind":"layout","layoutId":"f9f76924-dd44-4bee-8cb6-16a7b5681e2b","name":"Master","type":"master"}
+{"kind":"layout","layoutId":"6fde2855-dee3-4e43-af17-0c11b468b055","name":"Title Slide","type":"title"}
+{"kind":"slide","id":"sl/7jpyo8","slide":1,"title":"APPLE DEVELOPER WORKSHOP / 7.26","textShapes":11}
+{"kind":"shape","id":"sh/al8jyh8f","slide":1,"bbox":[760,0,520,720]}
+{"kind":"textbox","id":"sh/bmhkrmp0","slide":1,"text":"APPLE DEVELOPER WORKSHOP / 7.26","textPreview":"APPLE DEVELOPER WORKSHOP / 7.26","textChars":31,"textLines":1,"bbox":[72,70,580,24]}
+{"kind":"textbox","id":"sh/krq14r6h","slide":1,"text":"我不會 Swift，\n但我做了一個\nAI 怪獸對戰遊戲","textPreview":"我不會 Swift， | 但我做了一個 | AI 怪獸對戰遊戲","textChars":27,"textLines":3,"bbox":[72,138,680,220]}
+{"kind":"textbox","id":"sh/lsj2xw72","slide":1,"text":"一場從想法、規劃到 AI 協作實作的開發實驗。","textPreview":"一場從想法、規劃到 AI 協作實作的開發實驗。","textChars":23,"textLines":1,"bbox":[76,390,650,34]}
+{"kind":"shape","id":"sh/yp8j21ob","slide":1,"bbox":[76,480,120,30]}
+{"kind":"textbox","id":"sh/zqhkvmpw","slide":1,"text":"Context","textPreview":"Context","textChars":7,"textLines":1,"bbox":[76,485,120,20]}
+{"kind":"textbox","id":"sh/8fa18b6d","slide":1,"text":"→","textPreview":"→","textChars":1,"textLines":1,"bbox":[204,485,28,28]}
+{"kind":"shape","id":"sh/tgj21g7y","slide":1,"bbox":[240,480,120,30]}
+{"kind":"textbox","id":"sh/l0z2x4by","slide":1,"text":"Agents","textPreview":"Agents","textChars":6,"textLines":1,"bbox":[240,485,120,20]}
+{"kind":"textbox","id":"sh/kz61ozad","slide":1,"text":"→","textPreview":"→","textChars":1,"textLines":1,"bbox":[368,485,28,28]}
+{"kind":"shape","id":"sh/zyxkvuts","slide":1,"bbox":[404,480,110,30]}
+{"kind":"textbox","id":"sh/yxojmps7","slide":1,"text":"MVP","textPreview":"MVP","textChars":3,"textLines":1,"bbox":[404,485,110,20]}
+{"kind":"textbox","id":"sh/9oz214bu","slide":1,"text":"Snap Fighter","textPreview":"Snap Fighter","textChars":12,"textLines":1,"bbox":[76,594,300,26]}
+{"kind":"textbox","id":"sh/8nq1sza9","slide":1,"text":"不會 Swift，不代表不能做產品。","textPreview":"不會 Swift，不代表不能做產品。","textChars":18,"textLines":1,"bbox":[76,620,470,22]}
+{"kind":"textbox","id":"sh/psvipkbq","slide":1,"text":"拍照 → 生成 → 對戰","textPreview":"拍照 → 生成 → 對戰","textChars":12,"textLines":1,"bbox":[900,548,300,28]}
+{"kind":"image","id":"im/036ho7m5","slide":1,"name":"","geometry":"roundRect","alt":"Arcane battle arena","bbox":[840,0,440,720]}
+{"kind":"image","id":"im/8j2to36x","slide":1,"name":"","geometry":"roundRect","alt":"Flame Lamp Knight","bbox":[900,292,170,230]}
+{"kind":"image","id":"im/9kbah87i","slide":1,"name":"","geometry":"roundRect","alt":"Thunder Bell Knight","bbox":[1044,260,170,230]}
+{"kind":"notes","id":"nt/7jpyo8","slide":1,"text":""}
+{"kind":"slide","id":"sl/kc6wgi","slide":2,"title":"SNAP FIGHTER / AI 協作開發 WORKSHOP","textShapes":14}
+{"kind":"textbox","id":"sh/pg36pk7y","slide":2,"text":"SNAP FIGHTER / AI 協作開發 WORKSHOP","textPreview":"SNAP FIGHTER / AI 協作開發 WORKSHOP","textChars":31,"textLines":1,"bbox":[64,34,520,22]}
+{"kind":"textbox","id":"sh/2dcne5o7","slide":2,"text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[1140,34,76,22]}
+{"kind":"textbox","id":"sh/3elonaps","slide":2,"text":"00 / 為什麼是我來做這個題目","textPreview":"00 / 為什麼是我來做這個題目","textChars":16,"textLines":1,"bbox":[64,650,560,20]}
+{"kind":"shape","id":"sh/cje5kf69","slide":2,"bbox":[64,632,1152,0]}
+{"kind":"textbox","id":"sh/dkn6tknu","slide":2,"text":"我不是 Swift 開發者，\n但我擅長把複雜問題拆成 AI 可協作的系統。","textPreview":"我不是 Swift 開發者， | 但我擅長把複雜問題拆成 AI 可協作的系統。","textChars":37,"textLines":2,"bbox":[64,92,760,110]}
+{"kind":"textbox","id":"sh/qhcnipoj","slide":2,"text":"跨設計、前端、SEO、雲端與 AI 工作流整合，這正是 Snap Fighter 的出發點。","textPreview":"跨設計、前端、SEO、雲端與 AI 工作流整合，這正是 Snap Fighter 的出發點。","textChars":46,"textLines":1,"bbox":[68,226,820,26]}
+{"kind":"textbox","id":"sh/riloru54","slide":2,"text":"李奕叡 Eric Lee","textPreview":"李奕叡 Eric Lee","textChars":12,"textLines":1,"bbox":[68,294,360,34]}
+{"kind":"textbox","id":"sh/07epoz6l","slide":2,"text":"視覺全端工程師｜AI 協作開發實踐者","textPreview":"視覺全端工程師｜AI 協作開發實踐者","textChars":18,"textLines":1,"bbox":[68,334,500,26]}
+{"kind":"shape","id":"sh/18n6x4n6","slide":2,"bbox":[68,396,350,144]}
+{"kind":"shape","id":"sh/xsz29ofq","slide":2,"bbox":[68,396,8,144]}
+{"kind":"textbox","id":"sh/wrql0je5","slide":2,"text":"跨域背景","textPreview":"跨域背景","textChars":4,"textLines":1,"bbox":[94,418,302,30]}
+{"kind":"textbox","id":"sh/bqhk7exk","slide":2,"text":"平面、影音、UI/UX、網站工程\n把不同專業語言轉成同一條產品路徑","textPreview":"平面、影音、UI/UX、網站工程 | 把不同專業語言轉成同一條產品路徑","textChars":33,"textLines":2,"bbox":[94,462,302,62]}
+{"kind":"shape","id":"sh/ap83y9wz","slide":2,"bbox":[465,396,350,144]}
+{"kind":"shape","id":"sh/5wj2dofm","slide":2,"bbox":[465,396,8,144]}
+{"kind":"textbox","id":"sh/kval43eh","slide":2,"text":"經歷亮點","textPreview":"經歷亮點","textChars":4,"textLines":1,"bbox":[491,418,302,30]}
+{"kind":"textbox","id":"sh/ju1kbyxw","slide":2,"text":"參與 Hyundai Santa Fe\n原廠車載多媒體介面設計","textPreview":"參與 Hyundai Santa Fe | 原廠車載多媒體介面設計","textChars":31,"textLines":2,"bbox":[491,462,302,62]}
+{"kind":"shape","id":"sh/yt832twb","slide":2,"bbox":[862,396,350,144]}
+{"kind":"shape","id":"sh/10f214fi","slide":2,"bbox":[862,396,8,144]}
+{"kind":"textbox","id":"sh/0z61szex","slide":2,"text":"現在專注","textPreview":"現在專注","textChars":4,"textLines":1,"bbox":[888,418,302,30]}
+{"kind":"textbox","id":"sh/s3alozmt","slide":2,"text":"AI 協作開發、CMS、SEO\n與可驗證的工作流程設計","textPreview":"AI 協作開發、CMS、SEO | 與可驗證的工作流程設計","textChars":27,"textLines":2,"bbox":[888,462,302,62]}
+{"kind":"textbox","id":"sh/d4j2h4ne","slide":2,"text":"這場分享不是教你變成 Swift 專家，而是示範如何用 AI 把陌生技術組成可 demo 的產品。","textPreview":"這場分享不是教你變成 Swift 專家，而是示範如何用 AI 把陌生技術組成可 demo 的產品。","textChars":49,"textLines":1,"bbox":[68,574,1040,30]}
+{"kind":"notes","id":"nt/kc6wgi","slide":2,"text":""}
+{"kind":"slide","id":"sl/n8ffy6","slide":3,"title":"SNAP FIGHTER / AI 協作開發 WORKSHOP","textShapes":10}
+{"kind":"textbox","id":"sh/dsbi5k7a","slide":3,"text":"SNAP FIGHTER / AI 協作開發 WORKSHOP","textPreview":"SNAP FIGHTER / AI 協作開發 WORKSHOP","textChars":31,"textLines":1,"bbox":[64,34,520,22]}
+{"kind":"textbox","id":"sh/q5kjapoj","slide":3,"text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[1140,34,76,22]}
+{"kind":"textbox","id":"sh/rqt03up4","slide":3,"text":"01 / 開發方式正在改變","textPreview":"01 / 開發方式正在改變","textChars":13,"textLines":1,"bbox":[64,650,560,20]}
+{"kind":"shape","id":"sh/0vm1gz6l","slide":3,"bbox":[64,632,1152,0]}
+{"kind":"textbox","id":"sh/lwvi9476","slide":3,"text":"以前需要一個團隊，\n現在先需要一個可協作的系統。","textPreview":"以前需要一個團隊， | 現在先需要一個可協作的系統。","textChars":24,"textLines":2,"bbox":[64,92,760,110]}
+{"kind":"textbox","id":"sh/ytkjepov","slide":3,"text":"AI 改變的不是只有寫 code 的速度，而是誰能參與開發。","textPreview":"AI 改變的不是只有寫 code 的速度，而是誰能參與開發。","textChars":30,"textLines":1,"bbox":[68,226,760,26]}
+{"kind":"shape","id":"sh/zud07upg","slide":3,"bbox":[68,310,470,220]}
+{"kind":"shape","id":"sh/8zm14j6x","slide":3,"bbox":[68,310,8,220]}
+{"kind":"textbox","id":"sh/90v2d47i","slide":3,"text":"傳統流程","textPreview":"傳統流程","textChars":4,"textLines":1,"bbox":[94,332,422,30]}
+{"kind":"textbox","id":"sh/xob6pwj6","slide":3,"text":"企劃 → 設計 → 程式 → 測試\n每個角色依序交接，想法驗證成本高","textPreview":"企劃 → 設計 → 程式 → 測試 | 每個角色依序交接，想法驗證成本高","textChars":34,"textLines":2,"bbox":[94,376,422,138]}
+{"kind":"shape","id":"sh/wn25wr21","slide":3,"bbox":[742,310,470,220]}
+{"kind":"shape","id":"sh/bmtonm1g","slide":3,"bbox":[742,310,8,220]}
+{"kind":"textbox","id":"sh/alknu1kv","slide":3,"text":"AI 協作流程","textPreview":"AI 協作流程","textChars":7,"textLines":1,"bbox":[768,332,422,30]}
+{"kind":"textbox","id":"sh/5sv6tgji","slide":3,"text":"想法 → Context → Agent → 實作 → 審查\n一個人也能同時召集多種專業視角","textPreview":"想法 → Context → Agent → 實作 → 審查 | 一個人也能同時召集多種專業視角","textChars":46,"textLines":2,"bbox":[768,376,422,138]}
+{"kind":"textbox","id":"sh/kr250bix","slide":3,"text":"不是讓 AI 取代團隊，而是讓一個人能先跑出第一個版本。","textPreview":"不是讓 AI 取代團隊，而是讓一個人能先跑出第一個版本。","textChars":28,"textLines":1,"bbox":[68,572,900,28]}
+{"kind":"notes","id":"nt/n8ffy6","slide":3,"text":""}
+{"kind":"slide","id":"sl/061nkk","slide":4,"title":"SNAP FIGHTER / AI 協作開發 WORKSHOP","textShapes":14}
+{"kind":"textbox","id":"sh/fi9gby5g","slide":4,"text":"SNAP FIGHTER / AI 協作開發 WORKSHOP","textPreview":"SNAP FIGHTER / AI 協作開發 WORKSHOP","textChars":31,"textLines":1,"bbox":[64,34,520,22]}
+{"kind":"textbox","id":"sh/gjix43ml","slide":4,"text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[1140,34,76,22]}
+{"kind":"textbox","id":"sh/h4byd8n6","slide":4,"text":"02 / 開始之前，不是先寫 code","textPreview":"02 / 開始之前，不是先寫 code","textChars":19,"textLines":1,"bbox":[64,650,560,20]}
+{"kind":"shape","id":"sh/6d0fy94j","slide":4,"bbox":[64,632,1152,0]}
+{"kind":"textbox","id":"sh/7e9g7e54","slide":4,"text":"我先建立一個\n讓 AI 能工作的開發環境。","textPreview":"我先建立一個 | 讓 AI 能工作的開發環境。","textChars":21,"textLines":2,"bbox":[64,92,650,104]}
+{"kind":"textbox","id":"sh/sfix0jmp","slide":4,"text":"Context 的目的：讓每一次協作都不必重新解釋整個專案。","textPreview":"Context 的目的：讓每一次協作都不必重新解釋整個專案。","textChars":30,"textLines":1,"bbox":[68,222,760,26]}
+{"kind":"shape","id":"sh/tgry9ona","slide":4,"bbox":[68,294,520,270]}
+{"kind":"textbox","id":"sh/i9gfu94n","slide":4,"text":"Snap Fighter","textPreview":"Snap Fighter","textChars":12,"textLines":1,"bbox":[96,320,300,28]}
+{"kind":"textbox","id":"sh/japg3e58","slide":4,"text":"├── .development_document\n│   ├── context / decisions\n│   ├── plan / tasks\n│   └── changelog\n├── .memory\n├── .agents / skills\n└── Source Code","textPreview":"├── .development_document | │   ├── context / decisions | │   ├── plan / tasks | │   └── changelog | ├── .memory | ├── .agents / skills |...","textChars":141,"textLines":7,"bbox":[96,370,430,150]}
+{"kind":"shape","id":"sh/j21wfqd8","slide":4,"bbox":[680,294,532,76]}
+{"kind":"shape","id":"sh/i1svmlcn","slide":4,"bbox":[680,294,8,76]}
+{"kind":"textbox","id":"sh/543eh0ve","slide":4,"text":"目標","textPreview":"目標","textChars":2,"textLines":1,"bbox":[724,308,220,24]}
+{"kind":"textbox","id":"sh/k3axovut","slide":4,"text":"這個版本要驗證什麼？","textPreview":"這個版本要驗證什麼？","textChars":10,"textLines":1,"bbox":[944,310,230,22]}
+{"kind":"shape","id":"sh/76lwjqdk","slide":4,"bbox":[680,386,532,76]}
+{"kind":"shape","id":"sh/65cfqlcz","slide":4,"bbox":[680,386,8,76]}
+{"kind":"textbox","id":"sh/t83el0va","slide":4,"text":"限制","textPreview":"限制","textChars":2,"textLines":1,"bbox":[724,400,220,24]}
+{"kind":"textbox","id":"sh/s7uxsvu5","slide":4,"text":"平台、時間、技術邊界？","textPreview":"平台、時間、技術邊界？","textChars":11,"textLines":1,"bbox":[944,402,230,22]}
+{"kind":"shape","id":"sh/nahw76d0","slide":4,"bbox":[680,478,532,76]}
+{"kind":"shape","id":"sh/m98ve1cv","slide":4,"bbox":[680,478,8,76]}
+{"kind":"textbox","id":"sh/qpgzm9w3","slide":4,"text":"規則","textPreview":"規則","textChars":2,"textLines":1,"bbox":[724,492,220,24]}
+{"kind":"textbox","id":"sh/rqp0fexo","slide":4,"text":"什麼叫完成？如何驗證？","textPreview":"什麼叫完成？如何驗證？","textChars":11,"textLines":1,"bbox":[944,494,230,22]}
+{"kind":"textbox","id":"sh/cryhoje9","slide":4,"text":"Prompt 是一次性的指令；Context 是持續的工作記憶。","textPreview":"Prompt 是一次性的指令；Context 是持續的工作記憶。","textChars":32,"textLines":1,"bbox":[68,594,900,28]}
+{"kind":"notes","id":"nt/061nkk","slide":4,"text":""}
+{"kind":"slide","id":"sl/hvqhtx","slide":5,"title":"SNAP FIGHTER / AI 協作開發 WORKSHOP","textShapes":14}
+{"kind":"textbox","id":"sh/nm1o3254","slide":5,"text":"SNAP FIGHTER / AI 協作開發 WORKSHOP","textPreview":"SNAP FIGHTER / AI 協作開發 WORKSHOP","textChars":31,"textLines":1,"bbox":[64,34,520,22]}
+{"kind":"textbox","id":"sh/8na5c769","slide":5,"text":"05","textPreview":"05","textChars":2,"textLines":1,"bbox":[1140,34,76,22]}
+{"kind":"textbox","id":"sh/9oj65cnu","slide":5,"text":"03 / 不讓 AI 只有一個人格","textPreview":"03 / 不讓 AI 只有一個人格","textChars":17,"textLines":1,"bbox":[64,650,560,20]}
+{"kind":"shape","id":"sh/apsnexof","slide":5,"bbox":[64,632,1152,0]}
+{"kind":"textbox","id":"sh/vq1o7250","slide":5,"text":"把專業拆成角色，\n讓不同 Agent 檢查不同問題。","textPreview":"把專業拆成角色， | 讓不同 Agent 檢查不同問題。","textChars":26,"textLines":2,"bbox":[64,92,760,104]}
+{"kind":"textbox","id":"sh/wra5g76l","slide":5,"text":"每個角色都有自己的判斷標準，不是換一個稱呼而已。","textPreview":"每個角色都有自己的判斷標準，不是換一個稱呼而已。","textChars":24,"textLines":1,"bbox":[68,222,720,26]}
+{"kind":"shape","id":"sh/xs369cn6","slide":5,"bbox":[68,300,532,94]}
+{"kind":"textbox","id":"sh/idcnihor","slide":5,"text":"GAME PRODUCER","textPreview":"GAME PRODUCER","textChars":13,"textLines":1,"bbox":[92,318,250,24]}
+{"kind":"textbox","id":"sh/jelobm5w","slide":5,"text":"MVP 範圍、玩家循環、Demo 是否安全","textPreview":"MVP 範圍、玩家循環、Demo 是否安全","textChars":21,"textLines":1,"bbox":[92,352,470,22]}
+{"kind":"shape","id":"sh/7u9gfmhk","slide":5,"bbox":[648,300,532,94]}
+{"kind":"textbox","id":"sh/mt0z6hgf","slide":5,"text":"GAME DESIGNER","textPreview":"GAME DESIGNER","textChars":13,"textLines":1,"bbox":[672,318,250,24]}
+{"kind":"textbox","id":"sh/9wbyhwzq","slide":5,"text":"規則、平衡、每回合是否有決策","textPreview":"規則、平衡、每回合是否有決策","textChars":14,"textLines":1,"bbox":[672,352,470,22]}
+{"kind":"shape","id":"sh/8v2h8ry5","slide":5,"bbox":[68,428,532,94]}
+{"kind":"textbox","id":"sh/z69gb2ho","slide":5,"text":"UI DESIGNER","textPreview":"UI DESIGNER","textChars":11,"textLines":1,"bbox":[92,446,250,24]}
+{"kind":"textbox","id":"sh/y50z2h03","slide":5,"text":"資訊層級、按鈕位置、視覺回饋","textPreview":"資訊層級、按鈕位置、視覺回饋","textChars":14,"textLines":1,"bbox":[92,480,470,22]}
+{"kind":"shape","id":"sh/lsrydczu","slide":5,"bbox":[648,428,532,94]}
+{"kind":"textbox","id":"sh/krih47i9","slide":5,"text":"QA","textPreview":"QA","textChars":2,"textLines":1,"bbox":[672,446,250,24]}
+{"kind":"textbox","id":"sh/j2tgn6hs","slide":5,"text":"Edge case、失敗路徑、回歸測試","textPreview":"Edge case、失敗路徑、回歸測試","textChars":19,"textLines":1,"bbox":[672,480,470,22]}
+{"kind":"textbox","id":"sh/i1kze1g7","slide":5,"text":"AI 協作的關鍵，不是叫得更大聲，而是讓問題被不同角度看見。","textPreview":"AI 協作的關鍵，不是叫得更大聲，而是讓問題被不同角度看見。","textChars":30,"textLines":1,"bbox":[68,574,1050,28]}
+{"kind":"notes","id":"nt/hvqhtx","slide":5,"text":""}
+{"kind":"slide","id":"sl/xouazm","slide":6,"title":"SNAP FIGHTER / AI 協作開發 WORKSHOP","textShapes":11}
+{"kind":"textbox","id":"sh/sj254nyd","slide":6,"text":"SNAP FIGHTER / AI 協作開發 WORKSHOP","textPreview":"SNAP FIGHTER / AI 協作開發 WORKSHOP","textChars":31,"textLines":1,"bbox":[64,34,520,22]}
+{"kind":"textbox","id":"sh/ritobih8","slide":6,"text":"06","textPreview":"06","textChars":2,"textLines":1,"bbox":[1140,34,76,22]}
+{"kind":"textbox","id":"sh/qhkn2dgn","slide":6,"text":"04 / 先討論，再開發","textPreview":"04 / 先討論，再開發","textChars":12,"textLines":1,"bbox":[64,650,560,20]}
+{"kind":"shape","id":"sh/5gb698z2","slide":6,"bbox":[64,632,1152,0]}
+{"kind":"textbox","id":"sh/4f2503yh","slide":6,"text":"我不是直接命令 AI 寫遊戲。\n我先跟它一起把想法問清楚。","textPreview":"我不是直接命令 AI 寫遊戲。 | 我先跟它一起把想法問清楚。","textChars":29,"textLines":2,"bbox":[64,92,800,104]}
+{"kind":"shape","id":"sh/3eto7yhw","slide":6,"bbox":[68,286,390,190]}
+{"kind":"shape","id":"sh/idknytgb","slide":6,"bbox":[96,312,116,30]}
+{"kind":"textbox","id":"sh/pcf6lcz6","slide":6,"text":"人的想法","textPreview":"人的想法","textChars":4,"textLines":1,"bbox":[96,317,116,20]}
+{"kind":"textbox","id":"sh/obmpc7yl","slide":6,"text":"我想做一個\n拍照變怪獸的遊戲。","textPreview":"我想做一個 | 拍照變怪獸的遊戲。","textChars":15,"textLines":2,"bbox":[96,364,320,70]}
+{"kind":"textbox","id":"sh/up8nu1gj","slide":6,"text":"→","textPreview":"→","textChars":1,"textLines":1,"bbox":[500,356,50,50]}
+{"kind":"shape","id":"sh/vqhonmh4","slide":6,"bbox":[590,286,622,190]}
+{"kind":"shape","id":"sh/wrq5wry9","slide":6,"bbox":[618,312,116,30]}
+{"kind":"textbox","id":"sh/hsz6pwzu","slide":6,"text":"共同設計","textPreview":"共同設計","textChars":4,"textLines":1,"bbox":[618,317,116,20]}
+{"kind":"textbox","id":"sh/mlonqhg7","slide":6,"text":"玩家為什麼要拍？\n什麼算 MVP？30 分鐘能完成哪一段？","textPreview":"玩家為什麼要拍？ | 什麼算 MVP？30 分鐘能完成哪一段？","textChars":29,"textLines":2,"bbox":[618,364,540,70]}
+{"kind":"textbox","id":"sh/7mxojmhs","slide":6,"text":"對話會把模糊的願望，轉成可驗證的產品問題。","textPreview":"對話會把模糊的願望，轉成可驗證的產品問題。","textChars":21,"textLines":1,"bbox":[68,548,800,28]}
+{"kind":"textbox","id":"sh/8nq5sryd","slide":6,"text":"平台 / 玩家循環 / 技術限制 / Demo 路徑","textPreview":"平台 / 玩家循環 / 技術限制 / Demo 路徑","textChars":26,"textLines":1,"bbox":[68,588,780,22]}
+{"kind":"notes","id":"nt/xouazm","slide":6,"text":""}
+{"kind":"slide","id":"sl/uvxywu","slide":7,"title":"SNAP FIGHTER / AI 協作開發 WORKSHOP","textShapes":13}
+{"kind":"textbox","id":"sh/utwjihcf","slide":7,"text":"SNAP FIGHTER / AI 協作開發 WORKSHOP","textPreview":"SNAP FIGHTER / AI 協作開發 WORKSHOP","textChars":31,"textLines":1,"bbox":[64,34,520,22]}
+{"kind":"textbox","id":"sh/hgnidwb6","slide":7,"text":"07","textPreview":"07","textChars":2,"textLines":1,"bbox":[1140,34,76,22]}
+{"kind":"textbox","id":"sh/gfe1krul","slide":7,"text":"05 / Chat 不是成果，文件才是成果","textPreview":"05 / Chat 不是成果，文件才是成果","textChars":21,"textLines":1,"bbox":[64,650,560,20]}
+{"kind":"shape","id":"sh/3i50fmtw","slide":7,"bbox":[64,632,1152,0]}
+{"kind":"textbox","id":"sh/ihwjm1cr","slide":7,"text":"對話結束後，我把共識轉成\n下一個 Agent 可以執行的規劃書。","textPreview":"對話結束後，我把共識轉成 | 下一個 Agent 可以執行的規劃書。","textChars":32,"textLines":2,"bbox":[64,92,800,104]}
+{"kind":"shape","id":"sh/5k7ihwb2","slide":7,"bbox":[68,296,332,170]}
+{"kind":"textbox","id":"sh/4jy1oruh","slide":7,"text":"CONVERSATION","textPreview":"CONVERSATION","textChars":12,"textLines":1,"bbox":[92,322,280,26]}
+{"kind":"textbox","id":"sh/jml032ds","slide":7,"text":"想法、問題、取捨","textPreview":"想法、問題、取捨","textChars":8,"textLines":1,"bbox":[92,370,280,50]}
+{"kind":"textbox","id":"sh/ylczaxc7","slide":7,"text":"→","textPreview":"→","textChars":1,"textLines":1,"bbox":[408,360,32,32]}
+{"kind":"shape","id":"sh/c7uxozu5","slide":7,"bbox":[450,296,332,170]}
+{"kind":"textbox","id":"sh/x83yxkva","slide":7,"text":"GAME DESIGN","textPreview":"GAME DESIGN","textChars":11,"textLines":1,"bbox":[474,322,280,26]}
+{"kind":"textbox","id":"sh/q5sfmpwz","slide":7,"text":"Core Loop、玩家體驗","textPreview":"Core Loop、玩家體驗","textChars":14,"textLines":1,"bbox":[474,370,280,50]}
+{"kind":"textbox","id":"sh/b61gvudk","slide":7,"text":"→","textPreview":"→","textChars":1,"textLines":1,"bbox":[790,360,32,32]}
+{"kind":"shape","id":"sh/kbuxszu1","slide":7,"bbox":[832,296,332,170]}
+{"kind":"textbox","id":"sh/lc3y14vm","slide":7,"text":"IMPLEMENTATION","textPreview":"IMPLEMENTATION","textChars":14,"textLines":1,"bbox":[856,322,280,26]}
+{"kind":"textbox","id":"sh/y9cfqpcv","slide":7,"text":"任務、資料、驗收","textPreview":"任務、資料、驗收","textChars":8,"textLines":1,"bbox":[856,370,280,50]}
+{"kind":"shape","id":"sh/zalgzudg","slide":7,"bbox":[68,514,1050,76]}
+{"kind":"textbox","id":"sh/gfqxgfex","slide":7,"text":"Core Loop: 1. Capture Photo  2. Generate Monster  3. Battle  4. Result","textPreview":"Core Loop: 1. Capture Photo  2. Generate Monster  3. Battle  4. Result","textChars":70,"textLines":1,"bbox":[94,540,1000,26]}
+{"kind":"notes","id":"nt/uvxywu","slide":7,"text":""}
+{"kind":"slide","id":"sl/49th6j","slide":8,"title":"SNAP FIGHTER / AI 協作開發 WORKSHOP","textShapes":12}
+{"kind":"textbox","id":"sh/7adwnixw","slide":8,"text":"SNAP FIGHTER / AI 協作開發 WORKSHOP","textPreview":"SNAP FIGHTER / AI 協作開發 WORKSHOP","textChars":31,"textLines":1,"bbox":[64,34,520,22]}
+{"kind":"textbox","id":"sh/8b6dg3yh","slide":8,"text":"08","textPreview":"08","textChars":2,"textLines":1,"bbox":[1140,34,76,22]}
+{"kind":"textbox","id":"sh/tcfep8f2","slide":8,"text":"06 / 10 分鐘前置規劃","textPreview":"06 / 10 分鐘前置規劃","textChars":14,"textLines":1,"bbox":[64,650,560,20]}
+{"kind":"shape","id":"sh/udovidg7","slide":8,"bbox":[64,632,1152,0]}
+{"kind":"textbox","id":"sh/vexwrixs","slide":8,"text":"10 分鐘只做三個決定：\n做什麼、先不做什麼、怎麼算完成。","textPreview":"10 分鐘只做三個決定： | 做什麼、先不做什麼、怎麼算完成。","textChars":29,"textLines":2,"bbox":[64,92,780,110]}
+{"kind":"textbox","id":"sh/gf6xkned","slide":8,"text":"把想法變成 AI 能執行的邊界。","textPreview":"把想法變成 AI 能執行的邊界。","textChars":16,"textLines":1,"bbox":[68,226,480,26]}
+{"kind":"shape","id":"sh/hgfetsfy","slide":8,"bbox":[68,300,350,230]}
+{"kind":"shape","id":"sh/i1ofmxwj","slide":8,"bbox":[68,300,8,230]}
+{"kind":"textbox","id":"sh/32xwv2x4","slide":8,"text":"MUST","textPreview":"MUST","textChars":4,"textLines":1,"bbox":[94,322,302,30]}
+{"kind":"textbox","id":"sh/nuh83i5k","slide":8,"text":"拍照或選照片\nAI 回傳一張怪獸卡\n兩隻怪獸進入戰鬥","textPreview":"拍照或選照片 | AI 回傳一張怪獸卡 | 兩隻怪獸進入戰鬥","textChars":26,"textLines":3,"bbox":[94,366,302,148]}
+{"kind":"shape","id":"sh/mtoradoz","slide":8,"bbox":[465,300,350,230]}
+{"kind":"shape","id":"sh/9wzq58nq","slide":8,"bbox":[465,300,8,230]}
+{"kind":"textbox","id":"sh/8vq9c365","slide":8,"text":"LATER","textPreview":"LATER","textChars":5,"textLines":1,"bbox":[491,322,302,30]}
+{"kind":"textbox","id":"sh/z6x8zyp8","slide":8,"text":"卡牌收藏與升級\n替補位與交換\n勝利後經驗值","textPreview":"卡牌收藏與升級 | 替補位與交換 | 勝利後經驗值","textChars":21,"textLines":3,"bbox":[491,366,302,148]}
+{"kind":"shape","id":"sh/y5or6to3","slide":8,"bbox":[862,300,350,230]}
+{"kind":"shape","id":"sh/lsfq18ne","slide":8,"bbox":[862,300,8,230]}
+{"kind":"textbox","id":"sh/0r69836t","slide":8,"text":"NOT TODAY","textPreview":"NOT TODAY","textChars":9,"textLines":1,"bbox":[888,322,302,30]}
+{"kind":"textbox","id":"sh/j21sb25s","slide":8,"text":"多人連線\n商店與抽卡\n複雜的屬性相剋","textPreview":"多人連線 | 商店與抽卡 | 複雜的屬性相剋","textChars":18,"textLines":3,"bbox":[888,366,302,148]}
+{"kind":"textbox","id":"sh/i1srixo7","slide":8,"text":"MVP 的關鍵不是少寫 code，而是少承諾。","textPreview":"MVP 的關鍵不是少寫 code，而是少承諾。","textChars":23,"textLines":1,"bbox":[68,566,620,28]}
+{"kind":"notes","id":"nt/49th6j","slide":8,"text":""}
+{"kind":"slide","id":"sl/xnrgqb","slide":9,"title":"SNAP FIGHTER / AI 協作開發 WORKSHOP","textShapes":19}
+{"kind":"textbox","id":"sh/ove5cfyd","slide":9,"text":"SNAP FIGHTER / AI 協作開發 WORKSHOP","textPreview":"SNAP FIGHTER / AI 協作開發 WORKSHOP","textChars":31,"textLines":1,"bbox":[64,34,520,22]}
+{"kind":"textbox","id":"sh/nul4jahs","slide":9,"text":"09","textPreview":"09","textChars":2,"textLines":1,"bbox":[1140,34,76,22]}
+{"kind":"textbox","id":"sh/mtcna5g7","slide":9,"text":"07 / 把 MVP 畫成一條路","textPreview":"07 / 把 MVP 畫成一條路","textChars":16,"textLines":1,"bbox":[64,650,560,20]}
+{"kind":"shape","id":"sh/1s3mh0zm","slide":9,"bbox":[64,632,1152,0]}
+{"kind":"textbox","id":"sh/0ru58vy1","slide":9,"text":"我們先畫出 4 個畫面，\n再讓 AI 寫 SwiftUI。","textPreview":"我們先畫出 4 個畫面， | 再讓 AI 寫 SwiftUI。","textChars":29,"textLines":2,"bbox":[64,92,660,104]}
+{"kind":"textbox","id":"sh/zql4fqhw","slide":9,"text":"每一個畫面都只回答一個問題。","textPreview":"每一個畫面都只回答一個問題。","textChars":14,"textLines":1,"bbox":[68,222,560,26]}
+{"kind":"shape","id":"sh/epcn6lgb","slide":9,"bbox":[68,296,340,112]}
+{"kind":"shape","id":"sh/5o76t4f6","slide":9,"bbox":[88,322,42,42]}
+{"kind":"textbox","id":"sh/kny5kzyl","slide":9,"text":"1","textPreview":"1","textChars":1,"textLines":1,"bbox":[88,330,42,25]}
+{"kind":"textbox","id":"sh/qlkbqh0n","slide":9,"text":"拍照抓怪","textPreview":"拍照抓怪","textChars":4,"textLines":1,"bbox":[150,320,220,28]}
+{"kind":"textbox","id":"sh/rmtszmh8","slide":9,"text":"我想把什麼變成怪獸？","textPreview":"我想把什麼變成怪獸？","textChars":10,"textLines":1,"bbox":[150,356,230,24]}
+{"kind":"shape","id":"sh/sn2tsrit","slide":9,"bbox":[448,296,340,112]}
+{"kind":"shape","id":"sh/doba1wze","slide":9,"bbox":[468,322,42,42]}
+{"kind":"textbox","id":"sh/ix0rmh0r","slide":9,"text":"2","textPreview":"2","textChars":1,"textLines":1,"bbox":[468,330,42,25]}
+{"kind":"textbox","id":"sh/jy9sv2hc","slide":9,"text":"怪獸卡","textPreview":"怪獸卡","textChars":3,"textLines":1,"bbox":[530,320,220,28]}
+{"kind":"textbox","id":"sh/4z2to7ix","slide":9,"text":"AI 幫我生成了什麼？","textPreview":"AI 幫我生成了什麼？","textChars":11,"textLines":1,"bbox":[530,356,230,24]}
+{"kind":"shape","id":"sh/50baxczi","slide":9,"bbox":[68,442,340,112]}
+{"kind":"shape","id":"sh/2t4by1gv","slide":9,"bbox":[88,468,42,42]}
+{"kind":"textbox","id":"sh/nuds76hg","slide":9,"text":"3","textPreview":"3","textChars":1,"textLines":1,"bbox":[88,476,42,25]}
+{"kind":"textbox","id":"sh/zy58jyxs","slide":9,"text":"對戰場","textPreview":"對戰場","textChars":3,"textLines":1,"bbox":[150,466,220,28]}
+{"kind":"textbox","id":"sh/yxw7qtgn","slide":9,"text":"這一回合我要做什麼？","textPreview":"這一回合我要做什麼？","textChars":10,"textLines":1,"bbox":[150,502,230,24]}
+{"kind":"shape","id":"sh/l07ql8fy","slide":9,"bbox":[448,442,340,112]}
+{"kind":"shape","id":"sh/kzeps3yd","slide":9,"bbox":[468,468,42,42]}
+{"kind":"textbox","id":"sh/72p8nix4","slide":9,"text":"4","textPreview":"4","textChars":1,"textLines":1,"bbox":[468,476,42,25]}
+{"kind":"textbox","id":"sh/m1g7udgj","slide":9,"text":"戰鬥結果","textPreview":"戰鬥結果","textChars":4,"textLines":1,"bbox":[530,466,220,28]}
+{"kind":"textbox","id":"sh/947qp8fa","slide":9,"text":"我贏了什麼？","textPreview":"我贏了什麼？","textChars":6,"textLines":1,"bbox":[530,502,230,24]}
+{"kind":"shape","id":"sh/83ypw3yp","slide":9,"bbox":[850,292,362,264]}
+{"kind":"textbox","id":"sh/v6p8rix0","slide":9,"text":"最小資料契約","textPreview":"最小資料契約","textChars":6,"textLines":1,"bbox":[882,320,290,28]}
+{"kind":"textbox","id":"sh/u5g7ydgf","slide":9,"text":"Monster {\n  name, element,\n  hp, atk, def, skill\n}\n\nBattleState {\n  player, opponent, turn\n}","textPreview":"Monster { |   name, element, |   hp, atk, def, skill | } |  | BattleState { |   player, opponent, turn | }","textChars":92,"textLines":8,"bbox":[882,365,290,155]}
+{"kind":"notes","id":"nt/xnrgqb","slide":9,"text":""}
+{"kind":"slide","id":"sl/t9bvvz","slide":10,"title":"SNAP FIGHTER / AI 協作開發 WORKSHOP","textShapes":16}
+{"kind":"textbox","id":"sh/nilofu1g","slide":10,"text":"SNAP FIGHTER / AI 協作開發 WORKSHOP","textPreview":"SNAP FIGHTER / AI 協作開發 WORKSHOP","textChars":31,"textLines":1,"bbox":[64,34,520,22]}
+{"kind":"textbox","id":"sh/oju58zi1","slide":10,"text":"10","textPreview":"10","textChars":2,"textLines":1,"bbox":[1140,34,76,22]}
+{"kind":"textbox","id":"sh/pk36h4zm","slide":10,"text":"08 / 30 分鐘實作","textPreview":"08 / 30 分鐘實作","textChars":12,"textLines":1,"bbox":[64,650,560,20]}
+{"kind":"shape","id":"sh/alwna907","slide":10,"bbox":[64,632,1152,0]}
+{"kind":"textbox","id":"sh/bm5ojehs","slide":10,"text":"30 分鐘不是把整個產品做完。\n是把一個可玩的循環跑通。","textPreview":"30 分鐘不是把整個產品做完。 | 是把一個可玩的循環跑通。","textChars":28,"textLines":2,"bbox":[64,92,820,105]}
+{"kind":"shape","id":"sh/cne5czid","slide":10,"bbox":[68,300,344,206]}
+{"kind":"textbox","id":"sh/xon6l4zy","slide":10,"text":"0–10","textPreview":"0–10","textChars":4,"textLines":1,"bbox":[92,330,110,36]}
+{"kind":"textbox","id":"sh/6psny503","slide":10,"text":"先跑起來","textPreview":"先跑起來","textChars":4,"textLines":1,"bbox":[92,380,280,32]}
+{"kind":"textbox","id":"sh/rq147a1o","slide":10,"text":"Xcode 專案、畫面骨架、假資料","textPreview":"Xcode 專案、畫面骨架、假資料","textChars":17,"textLines":1,"bbox":[92,432,280,52]}
+{"kind":"textbox","id":"sh/jmhwn2ho","slide":10,"text":"→","textPreview":"→","textChars":1,"textLines":1,"bbox":[418,380,30,32]}
+{"kind":"shape","id":"sh/ylovux03","slide":10,"bbox":[450,300,344,206]}
+{"kind":"textbox","id":"sh/lozepsze","slide":10,"text":"10–20","textPreview":"10–20","textChars":5,"textLines":1,"bbox":[474,330,110,36]}
+{"kind":"textbox","id":"sh/knqdwni9","slide":10,"text":"接上 AI","textPreview":"接上 AI","textChars":5,"textLines":1,"bbox":[474,380,280,32]}
+{"kind":"textbox","id":"sh/bixwjihc","slide":10,"text":"圖片上傳、JSON 解碼、卡牌生成","textPreview":"圖片上傳、JSON 解碼、卡牌生成","textChars":17,"textLines":1,"bbox":[474,432,280,52]}
+{"kind":"textbox","id":"sh/ahovqd0r","slide":10,"text":"→","textPreview":"→","textChars":1,"textLines":1,"bbox":[800,380,30,32]}
+{"kind":"shape","id":"sh/xkfelszi","slide":10,"bbox":[832,300,344,206]}
+{"kind":"textbox","id":"sh/wj6dsnix","slide":10,"text":"20–30","textPreview":"20–30","textChars":5,"textLines":1,"bbox":[856,330,110,36]}
+{"kind":"textbox","id":"sh/nexcvyhg","slide":10,"text":"完成對戰","textPreview":"完成對戰","textChars":4,"textLines":1,"bbox":[856,380,280,32]}
+{"kind":"textbox","id":"sh/mt4vmd0v","slide":10,"text":"回合狀態、按鈕、勝負結果","textPreview":"回合狀態、按鈕、勝負結果","textChars":12,"textLines":1,"bbox":[856,432,280,52]}
+{"kind":"textbox","id":"sh/qp4fytkn","slide":10,"text":"完成標準：學員能拍照、看到一張卡、按下攻擊、看到結果。","textPreview":"完成標準：學員能拍照、看到一張卡、按下攻擊、看到結果。","textChars":27,"textLines":1,"bbox":[68,566,900,28]}
+{"kind":"notes","id":"nt/t9bvvz","slide":10,"text":""}
+{"kind":"slide","id":"sl/nk1spd","slide":11,"title":"SNAP FIGHTER / AI 協作開發 WORKSHOP","textShapes":13}
+{"kind":"textbox","id":"sh/bmp0j2t4","slide":11,"text":"SNAP FIGHTER / AI 協作開發 WORKSHOP","textPreview":"SNAP FIGHTER / AI 協作開發 WORKSHOP","textChars":31,"textLines":1,"bbox":[64,34,520,22]}
+{"kind":"textbox","id":"sh/cny1s7up","slide":11,"text":"11","textPreview":"11","textChars":2,"textLines":1,"bbox":[1140,34,76,22]}
+{"kind":"textbox","id":"sh/xorilcba","slide":11,"text":"09 / AI 協作的真實樣貌","textPreview":"09 / AI 協作的真實樣貌","textChars":15,"textLines":1,"bbox":[64,650,560,20]}
+{"kind":"shape","id":"sh/2xgjmdc7","slide":11,"bbox":[64,632,1152,0]}
+{"kind":"textbox","id":"sh/nyp0fits","slide":11,"text":"AI 會寫得很快，\n也會很快地寫錯。","textPreview":"AI 會寫得很快， | 也會很快地寫錯。","textChars":18,"textLines":2,"bbox":[64,92,650,100]}
+{"kind":"textbox","id":"sh/ozy1onud","slide":11,"text":"我們示範的不是完美 prompt，而是修正迴圈。","textPreview":"我們示範的不是完美 prompt，而是修正迴圈。","textChars":24,"textLines":1,"bbox":[68,220,620,26]}
+{"kind":"shape","id":"sh/p07ihsby","slide":11,"bbox":[68,292,110,30]}
+{"kind":"textbox","id":"sh/mt0jyhsr","slide":11,"text":"PROMPT","textPreview":"PROMPT","textChars":6,"textLines":1,"bbox":[68,297,110,20]}
+{"kind":"shape","id":"sh/7u90rmtc","slide":11,"bbox":[68,338,522,140]}
+{"kind":"textbox","id":"sh/bi98vm5k","slide":11,"text":"請建立一個 SwiftUI BattleView。\n玩家可以攻擊、使用技能或防禦，\n每次操作都更新 BattleState。","textPreview":"請建立一個 SwiftUI BattleView。 | 玩家可以攻擊、使用技能或防禦， | 每次操作都更新 BattleState。","textChars":62,"textLines":3,"bbox":[94,365,470,86]}
+{"kind":"textbox","id":"sh/qh07mh4z","slide":11,"text":"→","textPreview":"→","textChars":1,"textLines":1,"bbox":[612,384,42,42]}
+{"kind":"shape","id":"sh/dkbqxwnq","slide":11,"bbox":[688,292,88,30]}
+{"kind":"textbox","id":"sh/cjiporm5","slide":11,"text":"BUG","textPreview":"BUG","textChars":3,"textLines":1,"bbox":[688,297,88,20]}
+{"kind":"shape","id":"sh/zmt8z65w","slide":11,"bbox":[688,338,522,140]}
+{"kind":"textbox","id":"sh/ylk7q14b","slide":11,"text":"畫面能跑，但\n對手的 HP 沒有更新。","textPreview":"畫面能跑，但 | 對手的 HP 沒有更新。","textChars":19,"textLines":2,"bbox":[714,369,460,64]}
+{"kind":"shape","id":"sh/l8bq1gnm","slide":11,"bbox":[68,528,76,30]}
+{"kind":"textbox","id":"sh/0729sbmh","slide":11,"text":"FIX","textPreview":"FIX","textChars":3,"textLines":1,"bbox":[68,533,76,20]}
+{"kind":"textbox","id":"sh/nat8365s","slide":11,"text":"先讀 state，再看 action；不要只看畫面。","textPreview":"先讀 state，再看 action；不要只看畫面。","textChars":26,"textLines":1,"bbox":[166,530,660,26]}
+{"kind":"textbox","id":"sh/m9kru147","slide":11,"text":"AI 不會主動告訴你的三件事：\n狀態放錯地方、錯誤處理不完整、Demo 路徑沒有備案。","textPreview":"AI 不會主動告訴你的三件事： | 狀態放錯地方、錯誤處理不完整、Demo 路徑沒有備案。","textChars":43,"textLines":2,"bbox":[68,574,980,42]}
+{"kind":"notes","id":"nt/nk1spd","slide":11,"text":""}
+{"kind":"slide","id":"sl/oy2olr","slide":12,"title":"SNAP FIGHTER / AI 協作開發 WORKSHOP","textShapes":14}
+{"kind":"textbox","id":"sh/54nytwne","slide":12,"text":"SNAP FIGHTER / AI 協作開發 WORKSHOP","textPreview":"SNAP FIGHTER / AI 協作開發 WORKSHOP","textChars":31,"textLines":1,"bbox":[64,34,520,22]}
+{"kind":"textbox","id":"sh/ihwfih43","slide":12,"text":"12","textPreview":"12","textChars":2,"textLines":1,"bbox":[1140,34,76,22]}
+{"kind":"textbox","id":"sh/ji5grm5o","slide":12,"text":"10 / 工具也在演進","textPreview":"10 / 工具也在演進","textChars":11,"textLines":1,"bbox":[64,650,560,20]}
+{"kind":"shape","id":"sh/wfexg7mx","slide":12,"bbox":[64,632,1152,0]}
+{"kind":"textbox","id":"sh/xgnypcni","slide":12,"text":"從補完程式碼，\n到協助維護整個系統。","textPreview":"從補完程式碼， | 到協助維護整個系統。","textChars":18,"textLines":2,"bbox":[64,92,700,104]}
+{"kind":"textbox","id":"sh/adcfex4r","slide":12,"text":"以下是我在 Snap Fighter 開發過程中感受到的工作方式變化。","textPreview":"以下是我在 Snap Fighter 開發過程中感受到的工作方式變化。","textChars":35,"textLines":1,"bbox":[68,222,820,26]}
+{"kind":"shape","id":"sh/velwn25c","slide":12,"bbox":[68,300,334,184]}
+{"kind":"textbox","id":"sh/8buxc7m1","slide":12,"text":"Codex 5.4","textPreview":"Codex 5.4","textChars":9,"textLines":1,"bbox":[92,328,286,30]}
+{"kind":"textbox","id":"sh/9c3elcn6","slide":12,"text":"Code generation\n需要大量人工修正","textPreview":"Code generation | 需要大量人工修正","textChars":24,"textLines":2,"bbox":[92,384,286,62]}
+{"kind":"textbox","id":"sh/54fmh0ve","slide":12,"text":"→","textPreview":"→","textChars":1,"textLines":1,"bbox":[408,372,32,32]}
+{"kind":"shape","id":"sh/k365ovet","slide":12,"bbox":[450,300,334,184]}
+{"kind":"textbox","id":"sh/jix4fqd8","slide":12,"text":"Codex 5.5","textPreview":"Codex 5.5","textChars":9,"textLines":1,"bbox":[474,328,286,30]}
+{"kind":"textbox","id":"sh/ihonm5wn","slide":12,"text":"Context understanding\n開始能跟上專案脈絡","textPreview":"Context understanding | 開始能跟上專案脈絡","textChars":31,"textLines":2,"bbox":[474,384,286,62]}
+{"kind":"textbox","id":"sh/xgfmd0v2","slide":12,"text":"→","textPreview":"→","textChars":1,"textLines":1,"bbox":[790,372,32,32]}
+{"kind":"shape","id":"sh/wf65kveh","slide":12,"bbox":[832,300,334,184]}
+{"kind":"textbox","id":"sh/vex4bqdw","slide":12,"text":"Codex 5.6 Sol","textPreview":"Codex 5.6 Sol","textChars":13,"textLines":1,"bbox":[856,328,286,30]}
+{"kind":"textbox","id":"sh/ad4nilwb","slide":12,"text":"Architecture collaboration\n能參與長流程修改與取捨","textPreview":"Architecture collaboration | 能參與長流程修改與取捨","textChars":38,"textLines":2,"bbox":[856,384,286,62]}
+{"kind":"textbox","id":"sh/9cvm9gv6","slide":12,"text":"版本不是重點；重點是 AI 開始能理解：專案結構、開發意圖、修改影響。","textPreview":"版本不是重點；重點是 AI 開始能理解：專案結構、開發意圖、修改影響。","textChars":35,"textLines":1,"bbox":[68,546,1050,28]}
+{"kind":"notes","id":"nt/oy2olr","slide":12,"text":""}
+{"kind":"slide","id":"sl/8w0m9t","slide":13,"title":"SNAP FIGHTER / AI 協作開發 WORKSHOP","textShapes":14}
+{"kind":"textbox","id":"sh/rud47ap8","slide":13,"text":"SNAP FIGHTER / AI 協作開發 WORKSHOP","textPreview":"SNAP FIGHTER / AI 協作開發 WORKSHOP","textChars":31,"textLines":1,"bbox":[64,34,520,22]}
+{"kind":"textbox","id":"sh/cvmlgv6d","slide":13,"text":"13","textPreview":"13","textChars":2,"textLines":1,"bbox":[1140,34,76,22]}
+{"kind":"textbox","id":"sh/dwvm907y","slide":13,"text":"11 / 完成不是結束","textPreview":"11 / 完成不是結束","textChars":11,"textLines":1,"bbox":[64,650,560,20]}
+{"kind":"shape","id":"sh/2pk3alob","slide":13,"bbox":[64,632,1152,0]}
+{"kind":"textbox","id":"sh/3qtk3qpw","slide":13,"text":"同一份遊戲，交給不同專家\n檢查不同的「完成」。","textPreview":"同一份遊戲，交給不同專家 | 檢查不同的「完成」。","textChars":23,"textLines":2,"bbox":[64,92,820,104]}
+{"kind":"shape","id":"sh/4r2lcv6h","slide":13,"bbox":[68,286,334,222]}
+{"kind":"textbox","id":"sh/psbm5072","slide":13,"text":"GAME PRODUCER","textPreview":"GAME PRODUCER","textChars":13,"textLines":1,"bbox":[92,316,286,28]}
+{"kind":"textbox","id":"sh/mlo3mpov","slide":13,"text":"玩家 10 秒內知道怎麼玩嗎？\nMVP 是否太大？Demo 是否安全？","textPreview":"玩家 10 秒內知道怎麼玩嗎？ | MVP 是否太大？Demo 是否安全？","textChars":35,"textLines":2,"bbox":[92,374,286,80]}
+{"kind":"textbox","id":"sh/nmx4fup0","slide":13,"text":"不是挑錯，是讓下一版更可靠。","textPreview":"不是挑錯，是讓下一版更可靠。","textChars":14,"textLines":1,"bbox":[92,462,286,26]}
+{"kind":"shape","id":"sh/fa90vql0","slide":13,"bbox":[450,286,334,222]}
+{"kind":"textbox","id":"sh/e90z2l4v","slide":13,"text":"UI DESIGNER","textPreview":"UI DESIGNER","textChars":11,"textLines":1,"bbox":[474,316,286,28]}
+{"kind":"textbox","id":"sh/1wbix036","slide":13,"text":"玩家知道下一步嗎？\nHP、技能、主操作誰是焦點？","textPreview":"玩家知道下一步嗎？ | HP、技能、主操作誰是焦點？","textChars":24,"textLines":2,"bbox":[474,374,286,80]}
+{"kind":"textbox","id":"sh/gv2h4vml","slide":13,"text":"不是挑錯，是讓下一版更可靠。","textPreview":"不是挑錯，是讓下一版更可靠。","textChars":14,"textLines":1,"bbox":[474,462,286,26]}
+{"kind":"shape","id":"sh/3yt0zalc","slide":13,"bbox":[832,286,334,222]}
+{"kind":"textbox","id":"sh/2xkz654r","slide":13,"text":"QA","textPreview":"QA","textChars":2,"textLines":1,"bbox":[856,316,286,28]}
+{"kind":"textbox","id":"sh/p0bi103i","slide":13,"text":"網路斷線怎麼辦？\nAI timeout、空資料、重啟是否可恢復？","textPreview":"網路斷線怎麼辦？ | AI timeout、空資料、重啟是否可恢復？","textChars":32,"textLines":2,"bbox":[856,374,286,80]}
+{"kind":"textbox","id":"sh/oz2h8fmx","slide":13,"text":"不是挑錯，是讓下一版更可靠。","textPreview":"不是挑錯，是讓下一版更可靠。","textChars":14,"textLines":1,"bbox":[856,462,286,26]}
+{"kind":"textbox","id":"sh/b2t03al8","slide":13,"text":"AI 產生速度越快，越需要清楚的驗收視角。","textPreview":"AI 產生速度越快，越需要清楚的驗收視角。","textChars":21,"textLines":1,"bbox":[68,568,800,28]}
+{"kind":"notes","id":"nt/8w0m9t","slide":13,"text":""}
+{"kind":"slide","id":"sl/adl39h","slide":14,"title":"SNAP FIGHTER / AI 協作開發 WORKSHOP","textShapes":10}
+{"kind":"textbox","id":"sh/hozupgbe","slide":14,"text":"SNAP FIGHTER / AI 協作開發 WORKSHOP","textPreview":"SNAP FIGHTER / AI 協作開發 WORKSHOP","textChars":31,"textLines":1,"bbox":[64,34,520,22]}
+{"kind":"textbox","id":"sh/u18vulcn","slide":14,"text":"14","textPreview":"14","textChars":2,"textLines":1,"bbox":[1140,34,76,22]}
+{"kind":"textbox","id":"sh/v2hcnqt8","slide":14,"text":"12 / 用製作人的角度看缺點","textPreview":"12 / 用製作人的角度看缺點","textChars":15,"textLines":1,"bbox":[64,650,560,20]}
+{"kind":"shape","id":"sh/8zqdsbux","slide":14,"bbox":[64,632,1152,0]}
+{"kind":"textbox","id":"sh/90zulgb2","slide":14,"text":"Workshop 通過，不等於產品完成。\nDemo 可以成立，遊戲還要被驗證。","textPreview":"Workshop 通過，不等於產品完成。 | Demo 可以成立，遊戲還要被驗證。","textChars":39,"textLines":2,"bbox":[64,92,860,105]}
+{"kind":"shape","id":"sh/mxobq1cr","slide":14,"bbox":[68,274,132,30]}
+{"kind":"textbox","id":"sh/7yxcj6tc","slide":14,"text":"WORKSHOP","textPreview":"WORKSHOP","textChars":8,"textLines":1,"bbox":[68,279,132,20]}
+{"kind":"textbox","id":"sh/svad4vu1","slide":14,"text":"核心技術與 Demo 路徑可展示","textPreview":"核心技術與 Demo 路徑可展示","textChars":16,"textLines":1,"bbox":[224,280,480,24]}
+{"kind":"shape","id":"sh/twjux0bm","slide":14,"bbox":[68,350,112,30]}
+{"kind":"textbox","id":"sh/1k3i5gzi","slide":14,"text":"PRODUCT","textPreview":"PRODUCT","textChars":7,"textLines":1,"bbox":[68,355,112,20]}
+{"kind":"textbox","id":"sh/0ja1cbix","slide":14,"text":"戰鬥節奏、UI 優先級、再玩意願仍要驗證","textPreview":"戰鬥節奏、UI 優先級、再玩意願仍要驗證","textChars":20,"textLines":1,"bbox":[204,356,720,24]}
+{"kind":"shape","id":"sh/fi1036hc","slide":14,"bbox":[68,432,1144,116]}
+{"kind":"textbox","id":"sh/ehszal0r","slide":14,"text":"下一輪不是繼續堆功能，而是重做第一場戰鬥垂直切片。","textPreview":"下一輪不是繼續堆功能，而是重做第一場戰鬥垂直切片。","textChars":25,"textLines":1,"bbox":[96,458,1050,30]}
+{"kind":"textbox","id":"sh/dwji1gz6","slide":14,"text":"45 秒內出現第一次有效決策 · 單場 60–120 秒 · 6–10 個玩家回合","textPreview":"45 秒內出現第一次有效決策 · 單場 60–120 秒 · 6–10 個玩家回合","textChars":41,"textLines":1,"bbox":[96,506,1000,24]}
+{"kind":"notes","id":"nt/adl39h","slide":14,"text":""}
+{"kind":"slide","id":"sl/3hw6j2","slide":15,"title":"SNAP FIGHTER / FINAL DEMO FLOW","textShapes":23}
+{"kind":"textbox","id":"sh/4fa1g7m1","slide":15,"text":"SNAP FIGHTER / FINAL DEMO FLOW","textPreview":"SNAP FIGHTER / FINAL DEMO FLOW","textChars":30,"textLines":1,"bbox":[64,34,650,22]}
+{"kind":"textbox","id":"sh/je1kn25g","slide":15,"text":"90 秒展示一條完整的因果鏈。","textPreview":"90 秒展示一條完整的因果鏈。","textChars":15,"textLines":1,"bbox":[64,92,760,58]}
+{"kind":"textbox","id":"sh/idsjex4v","slide":15,"text":"輸入 → AI → 遊戲 → 結果；讓觀眾看見每一步為什麼存在。","textPreview":"輸入 → AI → 遊戲 → 結果；讓觀眾看見每一步為什麼存在。","textChars":32,"textLines":1,"bbox":[68,190,800,26]}
+{"kind":"shape","id":"sh/hcj2lsnq","slide":15,"bbox":[68,304,198,166]}
+{"kind":"textbox","id":"sh/wba1cnm5","slide":15,"text":"1","textPreview":"1","textChars":1,"textLines":1,"bbox":[88,328,36,34]}
+{"kind":"textbox","id":"sh/vahkji5k","slide":15,"text":"拍攝物品","textPreview":"拍攝物品","textChars":4,"textLines":1,"bbox":[88,382,158,28]}
+{"kind":"textbox","id":"sh/u98jax4z","slide":15,"text":"Idea / Input","textPreview":"Idea / Input","textChars":12,"textLines":1,"bbox":[88,428,158,24]}
+{"kind":"textbox","id":"sh/1832xw3u","slide":15,"text":"→","textPreview":"→","textChars":1,"textLines":1,"bbox":[272,374,26,26]}
+{"kind":"shape","id":"sh/g7u1orm9","slide":15,"bbox":[300,304,198,166]}
+{"kind":"textbox","id":"sh/ylkzelwf","slide":15,"text":"2","textPreview":"2","textChars":1,"textLines":1,"bbox":[320,328,36,34]}
+{"kind":"textbox","id":"sh/zmtg7qd0","slide":15,"text":"AI 生成怪獸","textPreview":"AI 生成怪獸","textChars":7,"textLines":1,"bbox":[320,382,158,28]}
+{"kind":"textbox","id":"sh/k7mhgve5","slide":15,"text":"Context / Output","textPreview":"Context / Output","textChars":16,"textLines":1,"bbox":[320,428,158,24]}
+{"kind":"textbox","id":"sh/l8vy90vq","slide":15,"text":"→","textPreview":"→","textChars":1,"textLines":1,"bbox":[504,374,26,26]}
+{"kind":"shape","id":"sh/ahkza1w3","slide":15,"bbox":[532,304,198,166]}
+{"kind":"textbox","id":"sh/bitg36xo","slide":15,"text":"3","textPreview":"3","textChars":1,"textLines":1,"bbox":[552,328,36,34]}
+{"kind":"textbox","id":"sh/cj2hcbe9","slide":15,"text":"生成卡牌","textPreview":"生成卡牌","textChars":4,"textLines":1,"bbox":[552,382,158,28]}
+{"kind":"textbox","id":"sh/xkby5gfu","slide":15,"text":"Data / UI","textPreview":"Data / UI","textChars":9,"textLines":1,"bbox":[552,428,158,24]}
+{"kind":"textbox","id":"sh/ud4zm5wn","slide":15,"text":"→","textPreview":"→","textChars":1,"textLines":1,"bbox":[736,374,26,26]}
+{"kind":"shape","id":"sh/vex0fads","slide":15,"bbox":[764,304,198,166]}
+{"kind":"textbox","id":"sh/ripw72dk","slide":15,"text":"4","textPreview":"4","textChars":1,"textLines":1,"bbox":[784,328,36,34]}
+{"kind":"textbox","id":"sh/6hgvyxcz","slide":15,"text":"開始戰鬥","textPreview":"開始戰鬥","textChars":4,"textLines":1,"bbox":[784,382,158,28]}
+{"kind":"textbox","id":"sh/tk7e9cva","slide":15,"text":"Action / State","textPreview":"Action / State","textChars":14,"textLines":1,"bbox":[784,428,158,24]}
+{"kind":"textbox","id":"sh/sjyd07up","slide":15,"text":"→","textPreview":"→","textChars":1,"textLines":1,"bbox":[968,374,26,26]}
+{"kind":"shape","id":"sh/fmpwb2dg","slide":15,"bbox":[996,304,198,166]}
+{"kind":"textbox","id":"sh/elgv2xcv","slide":15,"text":"5","textPreview":"5","textChars":1,"textLines":1,"bbox":[1016,328,36,34]}
+{"kind":"textbox","id":"sh/1oredcbm","slide":15,"text":"完成結果","textPreview":"完成結果","textChars":4,"textLines":1,"bbox":[1016,382,158,28]}
+{"kind":"textbox","id":"sh/gnyd47u1","slide":15,"text":"Review / Next","textPreview":"Review / Next","textChars":13,"textLines":1,"bbox":[1016,428,158,24]}
+{"kind":"textbox","id":"sh/kf2dwra5","slide":15,"text":"Fast path：快速開戰 → 先成功 → 再回頭看 AI。","textPreview":"Fast path：快速開戰 → 先成功 → 再回頭看 AI。","textChars":31,"textLines":1,"bbox":[68,558,780,28]}
+{"kind":"image","id":"im/4ve9kz6d","slide":15,"name":"","geometry":"roundRect","alt":"Flame Lamp Knight","bbox":[932,512,100,108]}
+{"kind":"image","id":"im/5wnqtkny","slide":15,"name":"","geometry":"roundRect","alt":"Thunder Bell Knight","bbox":[1042,512,100,108]}
+{"kind":"notes","id":"nt/3hw6j2","slide":15,"text":""}
+{"kind":"slide","id":"sl/2x4fgm","slide":16,"title":"AI 時代工程師的新能力","textShapes":11}
+{"kind":"shape","id":"sh/9cfuxsz6","slide":16,"bbox":[760,0,520,720]}
+{"kind":"textbox","id":"sh/8b6t4nyl","slide":16,"text":"AI 時代工程師的新能力","textPreview":"AI 時代工程師的新能力","textChars":12,"textLines":1,"bbox":[64,84,560,30]}
+{"kind":"textbox","id":"sh/z6xcrih4","slide":16,"text":"不是寫更多 code。\n是建立更好的系統，\n讓 AI 幫你完成。","textPreview":"不是寫更多 code。 | 是建立更好的系統， | 讓 AI 幫你完成。","textChars":32,"textLines":3,"bbox":[64,132,700,150]}
+{"kind":"shape","id":"sh/yl4bydgj","slide":16,"bbox":[68,344,42,42]}
+{"kind":"textbox","id":"sh/l8futsza","slide":16,"text":"1","textPreview":"1","textChars":1,"textLines":1,"bbox":[68,352,42,25]}
+{"kind":"textbox","id":"sh/076t0nyp","slide":16,"text":"先定義問題，再寫程式","textPreview":"先定義問題，再寫程式","textChars":10,"textLines":1,"bbox":[132,352,560,28]}
+{"kind":"shape","id":"sh/bidcnih8","slide":16,"bbox":[68,410,42,42]}
+{"kind":"textbox","id":"sh/qh4bud0n","slide":16,"text":"2","textPreview":"2","textChars":1,"textLines":1,"bbox":[68,418,42,25]}
+{"kind":"textbox","id":"sh/cfqd0zat","slide":16,"text":"Context 比 Prompt 更重要","textPreview":"Context 比 Prompt 更重要","textChars":20,"textLines":1,"bbox":[132,418,560,28]}
+{"kind":"shape","id":"sh/dgze94ry","slide":16,"bbox":[68,476,42,42]}
+{"kind":"textbox","id":"sh/qdovypsn","slide":16,"text":"3","textPreview":"3","textChars":1,"textLines":1,"bbox":[68,484,42,25]}
+{"kind":"textbox","id":"sh/rehc7u98","slide":16,"text":"AI 是協作者，不是自動販賣機","textPreview":"AI 是協作者，不是自動販賣機","textChars":15,"textLines":1,"bbox":[132,484,560,28]}
+{"kind":"textbox","id":"sh/4b6dwfah","slide":16,"text":"Snap Fighter","textPreview":"Snap Fighter","textChars":12,"textLines":1,"bbox":[68,572,260,28]}
+{"kind":"textbox","id":"sh/pcfu5kr2","slide":16,"text":"Q&A / 你想把什麼拍成怪獸？","textPreview":"Q&A / 你想把什麼拍成怪獸？","textChars":16,"textLines":1,"bbox":[68,604,660,30]}
+{"kind":"textbox","id":"sh/ipovupsb","slide":16,"text":"Xcode · GitHub Copilot · SwiftUI","textPreview":"Xcode · GitHub Copilot · SwiftUI","textChars":32,"textLines":1,"bbox":[900,628,300,20]}
+{"kind":"image","id":"im/3ax87alg","slide":16,"name":"","geometry":"roundRect","alt":"Arcane arena","bbox":[840,0,440,720]}
+{"kind":"notes","id":"nt/2x4fgm","slide":16,"text":""}

@@ -1,6 +1,6 @@
-# Snap Fighter iOS
+# 攝靈者卡牌 iOS
 
-Snap Fighter 是一個 iOS Workshop 範例專案。玩家可以拍照或選取照片，交給 AI 分析後生成怪獸卡牌，再進入對戰。
+攝靈者卡牌是一個 iOS Workshop 範例專案。玩家可以拍照或選取照片，交給 AI 分析後生成怪獸卡牌，再進入對戰。
 
 Repository:
 `https://github.com/hedula/snap-fighter-ios.git`
