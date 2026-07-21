@@ -12,7 +12,16 @@ worker/.wrangler/
 
 # Local agent/project notes
 .claude/
-.development_document/
+AGENT.md
+AGENTS.md
+.development_document/*
+!.development_document/FILES_STRUCTURE.md
+!.development_document/0_context/
+.development_document/0_context/*
+!.development_document/0_context/current_project_status.md
+!.development_document/6_changelog/
+.development_document/6_changelog/*
+!.development_document/6_changelog/2026-07-21_development_document_structure_cleanup.md
 
 # macOS
 .DS_Store
