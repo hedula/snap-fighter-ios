@@ -710,6 +710,47 @@ struct Snap_FighterTests {
         #expect(defaultFallback == AIProviderSelection(provider: .auto, source: "Default"))
     }
 
+    @Test func aiServiceRecognizesCloudflareAccessHTML() {
+        let html = """
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Sign in ・ Cloudflare Access</title>
+          </head>
+        </html>
+        """
+        let detectedByBody = AIService.isCloudflareAccessPayload(
+            data: Data(html.utf8),
+            contentType: "text/html; charset=UTF-8",
+            authenticateHeader: nil
+        )
+        let detectedByHeader = AIService.isCloudflareAccessPayload(
+            data: Data("".utf8),
+            contentType: nil,
+            authenticateHeader: "Cloudflare-Access resource_metadata=\"https://example.test\""
+        )
+
+        #expect(detectedByBody)
+        #expect(detectedByHeader)
+    }
+
+    @Test func aiServiceSummarizesHTMLDecodeFailures() {
+        let html = """
+        <!DOCTYPE html>
+        <html>
+          <head><title>Sign in ・ Cloudflare Access</title></head>
+          <body>\(String(repeating: "登入頁內容", count: 80))</body>
+        </html>
+        """
+
+        let summary = AIService.decodingFailureSummary(
+            from: Data(html.utf8),
+            contentType: "text/html; charset=UTF-8"
+        )
+
+        #expect(summary == "伺服器回傳 HTML 頁面，不是怪物 JSON")
+    }
+
     @Test func battleSessionAttackHandsTurnToOpponent() {
         var session = BattleSession(
             player: Monster(name: "玩家貓", element: .fire, hp: 70, atk: 50, def: 20, skill: "火抓"),

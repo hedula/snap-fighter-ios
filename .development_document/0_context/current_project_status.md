@@ -24,6 +24,7 @@ This file is the canonical current-status summary for Snap Fighter. Use `.develo
 - Unit tests live in `Snap FighterTests/`
 - UI tests live in `Snap FighterUITests/`
 - Monster analysis can route through `AI_PROVIDER=auto`, `apple-local`, `worker`, or `mock`
+- `auto` falls back to local mock output when the Worker endpoint is blocked by Cloudflare Access, so workshop/demo capture flow does not stop on an HTML login page
 - Worker-backed analysis lives in `worker/`
 - Static promotional site lives in `promo-site/`
 

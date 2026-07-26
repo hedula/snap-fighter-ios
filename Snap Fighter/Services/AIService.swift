@@ -108,13 +108,23 @@ final class AIService {
                     return try await AppleLocalMonsterAnalyzer(isolateForeground: isolateForeground)
                         .analyze(image: image, onProgress: onProgress)
                 } catch AIError.localModelUnavailable(_) {
-                    return try await WorkerMonsterAnalyzer(isolateForeground: isolateForeground)
-                        .analyze(image: image, onProgress: onProgress)
+                    do {
+                        return try await WorkerMonsterAnalyzer(isolateForeground: isolateForeground)
+                            .analyze(image: image, onProgress: onProgress)
+                    } catch AIError.accessProtected {
+                        return try await MockMonsterAnalyzer(isolateForeground: isolateForeground)
+                            .analyze(image: image, onProgress: onProgress)
+                    }
                 }
             }
 
-            return try await WorkerMonsterAnalyzer(isolateForeground: isolateForeground)
-                .analyze(image: image, onProgress: onProgress)
+            do {
+                return try await WorkerMonsterAnalyzer(isolateForeground: isolateForeground)
+                    .analyze(image: image, onProgress: onProgress)
+            } catch AIError.accessProtected {
+                return try await MockMonsterAnalyzer(isolateForeground: isolateForeground)
+                    .analyze(image: image, onProgress: onProgress)
+            }
         case .appleLocal:
             return try await AppleLocalMonsterAnalyzer(isolateForeground: isolateForeground)
                 .analyze(image: image, onProgress: onProgress)
@@ -143,7 +153,7 @@ final class AIService {
         )
     }
 
-    fileprivate static func extractErrorMessage(from data: Data) -> String? {
+    static func extractErrorMessage(from data: Data) -> String? {
         guard
             let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
             let message = json["error"] as? String
@@ -151,6 +161,42 @@ final class AIService {
             return nil
         }
         return message
+    }
+
+    static func isCloudflareAccessPayload(
+        data: Data,
+        contentType: String?,
+        authenticateHeader: String?
+    ) -> Bool {
+        if authenticateHeader?.localizedCaseInsensitiveContains("cloudflare-access") == true {
+            return true
+        }
+
+        let isHTML = contentType?.localizedCaseInsensitiveContains("text/html") == true
+        guard isHTML, let text = String(data: data, encoding: .utf8) else {
+            return false
+        }
+
+        return text.localizedCaseInsensitiveContains("Cloudflare Access")
+            || text.localizedCaseInsensitiveContains("/cdn-cgi/access/login")
+    }
+
+    static func decodingFailureSummary(from data: Data, contentType: String?) -> String {
+        if contentType?.localizedCaseInsensitiveContains("text/html") == true {
+            return "伺服器回傳 HTML 頁面，不是怪物 JSON"
+        }
+
+        let raw = String(data: data, encoding: .utf8) ?? "<non-utf8 payload>"
+        let compact = raw
+            .replacingOccurrences(of: "\n", with: " ")
+            .replacingOccurrences(of: "\r", with: " ")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard compact.count > 240 else {
+            return compact.isEmpty ? "空白回應" : compact
+        }
+
+        return "\(compact.prefix(240))..."
     }
 
     static func makeUploadImageData(from image: UIImage) -> Data? {
@@ -220,8 +266,15 @@ private struct WorkerMonsterAnalyzer: MonsterAnalyzing {
         }
 
         guard httpResponse.statusCode == 200 else {
+            if Self.isCloudflareAccessResponse(data: data, response: httpResponse) {
+                throw AIError.accessProtected
+            }
             let message = Self.extractErrorMessage(from: data) ?? "HTTP \(httpResponse.statusCode)"
             throw AIError.apiError(message)
+        }
+
+        if Self.isCloudflareAccessResponse(data: data, response: httpResponse) {
+            throw AIError.accessProtected
         }
 
         do {
@@ -232,8 +285,7 @@ private struct WorkerMonsterAnalyzer: MonsterAnalyzing {
                 diagnostics: diagnostics
             )
         } catch {
-            let raw = String(data: data, encoding: .utf8) ?? "<non-utf8 payload>"
-            throw AIError.decodingFailed(raw)
+            throw AIError.decodingFailed(Self.decodingFailureSummary(from: data, response: httpResponse))
         }
     }
 
@@ -243,6 +295,21 @@ private struct WorkerMonsterAnalyzer: MonsterAnalyzing {
 
     private static func extractErrorMessage(from data: Data) -> String? {
         AIService.extractErrorMessage(from: data)
+    }
+
+    private static func isCloudflareAccessResponse(data: Data, response: HTTPURLResponse) -> Bool {
+        AIService.isCloudflareAccessPayload(
+            data: data,
+            contentType: response.value(forHTTPHeaderField: "Content-Type"),
+            authenticateHeader: response.value(forHTTPHeaderField: "WWW-Authenticate")
+        )
+    }
+
+    private static func decodingFailureSummary(from data: Data, response: HTTPURLResponse) -> String {
+        AIService.decodingFailureSummary(
+            from: data,
+            contentType: response.value(forHTTPHeaderField: "Content-Type")
+        )
     }
 
     private static func extractDiagnostics(from response: HTTPURLResponse) -> AIDiagnostics? {
@@ -407,6 +474,7 @@ enum AIError: LocalizedError {
     case invalidResponse
     case analysisTimedOut
     case localModelUnavailable(String)
+    case accessProtected
     case apiError(String)
     case decodingFailed(String)
 
@@ -417,6 +485,7 @@ enum AIError: LocalizedError {
         case .invalidResponse:       return "Worker 回傳格式錯誤"
         case .analysisTimedOut:      return "怪物卡牌生成逾時，請檢查網路後再試一次"
         case .localModelUnavailable(let reason): return "本機 AI 不可用：\(reason)"
+        case .accessProtected:       return "Worker API 目前被 Cloudflare Access 保護，請改用 mock、本機 AI，或解除 Access 後再試"
         case .apiError(let message): return "API 錯誤：\(message)"
         case .decodingFailed(let s): return "解析失敗：\(s)"
         }
